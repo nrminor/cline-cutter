@@ -1,16 +1,40 @@
 # Variant-calling Passerina WGS data with nf-core/sarek
 
-### Overview
+## Overview
 
 Bioinformatics has come a long way in the past few years. Containerized software and efficient, open-source workflow managers are now the norm, making it easier than ever to do science rigorously and reproducibly. Biologists have coalesced most widely around the workflow manager [Nextflow](https://nextflow.io/), which offers [many advantages for high-throughput biological data](https://www.nextflow.io/blog/2022/learn-nextflow-in-2022.html). These include that Nextflow workflows follow [FAIR Guiding Principles for scientific data management and stewardship](https://www.nature.com/articles/sdata201618). They are also portable, meaning they can be used in the same way across a wide variety of compute infrastructures (e.g., desktop personal computers, HPC Clusters, Amazon and Google cloud services, and Kubernetes). Nextflow handles all parallel execution itself, making it much more efficient than linear pipeline scripts, and also scalable to any amount of data.
 
-Perhaps best of all, Nextflow boasts an active and growing support community, which, for many oft-used workflow applications, include [nf-core](https://nf-co.re/). Pipelines in nf-core are among the most sophisticated and widely used pipelines to date, and are also completely open-source, excellently documented, and available via GitHub.
+Perhaps best of all, Nextflow boasts an active and growing support community, which, for many oft-used workflow applications, include [nf-core](https://nf-co.re/). Pipelines in nf-core are among the most sophisticated and widely used pipelines to date, and are also completely open-source, well-documented, deeply configurable, and available to all via GitHub.
 
-One such pipeline is [nf-core/sarek](nf-core/sarek), which is nf-core's standard variant-calling pipeline for diploid organisms (plus some add-ons for comparing tumor and normal cells for clinical bioinformatics). Sarek automates the process of breaking large sequencing read files into small chunks and processing them in parallel, which massively reduces the amount of compute time required to analyze large datasets. It also generates a wide variety of data QA/QC visualizations, allowing you to fine-tune your analysis to strengths and weaknesses of your data that you may otherwise be blind to.
+One such pipeline is [nf-core/sarek](nf-core/sarek), which is nf-core's standard variant-calling pipeline for diploid organisms (plus some add-ons for comparing tumor and normal cells for clinical bioinformatics). Sarek automates the process of breaking large sequencing read files into small chunks and processing them in parallel, which massively reduces the compute time required to analyze large datasets. It also generates a wide variety of data QA/QC visualizations, allowing you to fine-tune your analysis to strengths and weaknesses of your data that you may otherwise be blind to.
 
-For my thesis project, a key file format is the VCF. With the existence of nf-core/sarek, there truly is no reason to reinvent the bioinformatics wheel. Instead, I made a simple configuration file for running SAREK on the University of Wyoming Advanced Research Computing Center's HPC Cluster _Beartooth_. Below I detail the steps I took to configure and run Sarek on Beartooth. Later, I will add my post-processing analysis codebase to a second repo.
+For my thesis project, a key file format is the VCF. With the existence of nf-core/sarek, there truly is no reason to reinvent the bioinformatics wheel. Instead, I made a simple configuration file for running Sarek on the University of Wyoming Advanced Research Computing Center's HPC Cluster _Beartooth_ ([read more here](https://arccwiki.atlassian.net/wiki/spaces/DOCUMENTAT/pages/1683587073)). Below I detail the steps I took to configure and run Sarek on Beartooth. Later, I will add my post-processing analysis codebase to a second repo.
+
+## Set-Up on the ARCC Beartooth Cluster
+
+To proceed through the following three steps and reproduce my results, you will need:
+
+1. Access to the Beartooth HPC cluster.
+2. Access to resources via a project on Beartooth, such as _passerinagenome_.
+
+Next, to get all your files in place, open a Terminal and `ssh` into beartooth, like so:
+
+```
+ssh <username>@beartooth.arcc.uwyo.edu
+```
+
+Then, change to your user folder within the associated project folder, create a directory where you will run this pipeline, and run:
+
+```
+module load arcc/1.0 gcc/12.2.0 git/2.37.0
+https://github.com/nrminor/uwyo-thesis-project.git .
+```
+
+This will pull my configuration of files into the working directory.
 
 ### Step 1: Pre-run shell setup
+
+Next, we need to set-up our shell so that it has the software it needs to run:
 
 ```
 module load arcc/1.0 gcc/12.2.0 nextflow/22.10.4 singularity/3.10.3
@@ -49,7 +73,7 @@ The most important information in my case are the columns `sample`, `fastq_1`, a
 
 ### Step 3: Launch the pipeline
 
-To run the pipeline with my configuration, I set up my working directory like so:
+Finally, to run the pipeline with my configuration, I set up my working directory like so:
 
 ```
 working_directory/
@@ -74,22 +98,26 @@ nextflow -bg run nf-core/sarek -profile singularity -c config/beartooth.config
 
 ```
 
+Once the pipeline gets going, Nextflow handles all resource requesting with Slurm, meaning you do not need to allocate resources with `sbatch` yourself.
+
 If the workflow crashes, hangs up, or errors out, run the same command as above but with the `-resume` flag, like so:
 
 ```
 nextflow -bg run nf-core/sarek -profile singularity -c config/beartooth.config -resume
 ```
 
+Thanks to Nextflow's detailed logging, the pipeline will be able to pick up where it left off instead of running all the way from the beginning.
+
 #### Running interactively
 
-If you keep running into errors or other issues, I recommend you run the pipeline interactively on a subset of your data. To do so, simply run the same command as above but without the `-bg` flag:
+If you keep running into errors or other issues, I recommend you run the pipeline interactively on a subset of your data (say, the first two rows only of the sample sheet). To do so, simply create a truncated copy of the sample sheet, run the same command as above with the new config file and without the `-bg` flag:
 
 ```
-nextflow run nf-core/sarek -profile singularity -c config/beartooth.config
+nextflow run nf-core/sarek -profile singularity -c config/new.config
 ```
 
 Resume the run after fixing any errors with:
 
 ```
-nextflow run nf-core/sarek -profile singularity -c config/beartooth.config -resume
+nextflow run nf-core/sarek -profile singularity -c config/new.config -resume
 ```
