@@ -1,0 +1,9 @@
+results_*/
+results/
+.nextflow/
+work/
+resources/GCA_014549065.1_CCar_1.0_genomic.fna
+
+.nextflow.log*
+.nextflow.pid*
+
