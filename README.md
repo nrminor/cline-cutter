@@ -1,4 +1,4 @@
-# Variant-calling Passerina WGS data with nf-core/sarek -r 3.0.1
+# Variant-calling Passerina WGS data with nf-core/sarek
 
 ## Overview
 
@@ -6,9 +6,9 @@ Bioinformatics has come a long way in the past few years. Containerized software
 
 Perhaps best of all, Nextflow boasts an active and growing support community, which, for many oft-used workflow applications, includes [nf-core](https://nf-co.re/). Pipelines in nf-core are among the most sophisticated and widely used pipelines to date, and are also completely open-source, well-documented, deeply configurable, and available to all via GitHub.
 
-One such pipeline is [nf-core/sarek -r 3.0.1](nf-core/sarek -r 3.0.1), which is nf-core's standard variant-calling pipeline for diploid organisms (plus some add-ons for comparing tumor and normal cells for clinical bioinformatics). Sarek automates the process of breaking large sequence read files into small chunks and processing them in parallel, which massively reduces the compute time required to analyze large datasets. It also generates a wide variety of data QA/QC visualizations, allowing you to fine-tune your analysis to strengths and weaknesses of your data that you may otherwise be blind to.
+One such pipeline is [nf-core/sarek](https://nf-co.re/sarek), which is nf-core's standard variant-calling pipeline for diploid organisms (plus some add-ons for comparing tumor and normal cells for clinical bioinformatics). Sarek automates the process of breaking large sequence read files into small chunks and processing them in parallel, which massively reduces the compute time required to analyze large datasets. It also generates a wide variety of data QA/QC visualizations, allowing you to fine-tune your analysis to strengths and weaknesses of your data that you may otherwise be blind to.
 
-For my thesis project, a key file format is the VCF. With the existence of nf-core/sarek -r 3.0.1, there truly is no reason to reinvent the bioinformatics wheel. Instead, I made a simple configuration file for running Sarek on the University of Wyoming Advanced Research Computing Center's HPC Cluster _Beartooth_ ([read more here](https://arccwiki.atlassian.net/wiki/spaces/DOCUMENTAT/pages/1683587073)). Below I detail the steps I took to configure and run Sarek on Beartooth. Later, I will add my post-processing analysis codebase to a second repo.
+For my thesis project, a key file format is the VCF. With the existence of nf-core/sarek, there truly is no reason to reinvent the bioinformatics wheel. Instead, I made a simple configuration file for running Sarek on the University of Wyoming Advanced Research Computing Center's HPC Cluster _Beartooth_ ([read more here](https://arccwiki.atlassian.net/wiki/spaces/DOCUMENTAT/pages/1683587073)). Below I detail the steps I took to configure and run Sarek on Beartooth. Later, I will add my post-processing analysis codebase to a second repo.
 
 ## Set-Up on the ARCC Beartooth Cluster
 
