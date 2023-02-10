@@ -1,4 +1,4 @@
-# Variant-calling Passerina WGS data with nf-core/sarek
+# Variant-calling Passerina WGS data with nf-core/sarek -r 3.0.1
 
 ## Overview
 
@@ -6,9 +6,9 @@ Bioinformatics has come a long way in the past few years. Containerized software
 
 Perhaps best of all, Nextflow boasts an active and growing support community, which, for many oft-used workflow applications, includes [nf-core](https://nf-co.re/). Pipelines in nf-core are among the most sophisticated and widely used pipelines to date, and are also completely open-source, well-documented, deeply configurable, and available to all via GitHub.
 
-One such pipeline is [nf-core/sarek](nf-core/sarek), which is nf-core's standard variant-calling pipeline for diploid organisms (plus some add-ons for comparing tumor and normal cells for clinical bioinformatics). Sarek automates the process of breaking large sequence read files into small chunks and processing them in parallel, which massively reduces the compute time required to analyze large datasets. It also generates a wide variety of data QA/QC visualizations, allowing you to fine-tune your analysis to strengths and weaknesses of your data that you may otherwise be blind to.
+One such pipeline is [nf-core/sarek -r 3.0.1](nf-core/sarek -r 3.0.1), which is nf-core's standard variant-calling pipeline for diploid organisms (plus some add-ons for comparing tumor and normal cells for clinical bioinformatics). Sarek automates the process of breaking large sequence read files into small chunks and processing them in parallel, which massively reduces the compute time required to analyze large datasets. It also generates a wide variety of data QA/QC visualizations, allowing you to fine-tune your analysis to strengths and weaknesses of your data that you may otherwise be blind to.
 
-For my thesis project, a key file format is the VCF. With the existence of nf-core/sarek, there truly is no reason to reinvent the bioinformatics wheel. Instead, I made a simple configuration file for running Sarek on the University of Wyoming Advanced Research Computing Center's HPC Cluster _Beartooth_ ([read more here](https://arccwiki.atlassian.net/wiki/spaces/DOCUMENTAT/pages/1683587073)). Below I detail the steps I took to configure and run Sarek on Beartooth. Later, I will add my post-processing analysis codebase to a second repo.
+For my thesis project, a key file format is the VCF. With the existence of nf-core/sarek -r 3.0.1, there truly is no reason to reinvent the bioinformatics wheel. Instead, I made a simple configuration file for running Sarek on the University of Wyoming Advanced Research Computing Center's HPC Cluster _Beartooth_ ([read more here](https://arccwiki.atlassian.net/wiki/spaces/DOCUMENTAT/pages/1683587073)). Below I detail the steps I took to configure and run Sarek on Beartooth. Later, I will add my post-processing analysis codebase to a second repo.
 
 ## Set-Up on the ARCC Beartooth Cluster
 
@@ -94,7 +94,7 @@ Usually, I use the Nextflow flag `-bg` to run the pipeline in the background, wh
 To run the workflow in the background, use:
 
 ```
-nextflow -bg run nf-core/sarek -profile singularity -c config/beartooth.config
+nextflow -bg run nf-core/sarek -r 3.0.1 -profile singularity -c config/beartooth.config
 
 ```
 
@@ -103,7 +103,7 @@ Once the pipeline gets going, Nextflow handles all resource requesting with Slur
 If the workflow crashes, hangs up, or errors out, run the same command as above but with the `-resume` flag, like so:
 
 ```
-nextflow -bg run nf-core/sarek -profile singularity -c config/beartooth.config -resume
+nextflow -bg run nf-core/sarek -r 3.0.1 -profile singularity -c config/beartooth.config -resume
 ```
 
 Thanks to Nextflow's detailed logging, the pipeline will be able to pick up where it left off instead of running all the way from the beginning.
@@ -113,11 +113,11 @@ Thanks to Nextflow's detailed logging, the pipeline will be able to pick up wher
 If you keep running into errors or other issues, I recommend you run the pipeline interactively on a subset of your data (say, the first two rows only of the sample sheet). To do so, simply create a truncated copy of the sample sheet, run the same command as above with the new config file and without the `-bg` flag:
 
 ```
-nextflow run nf-core/sarek -profile singularity -c config/new.config
+nextflow run nf-core/sarek -r 3.0.1 -profile singularity -c config/new.config
 ```
 
 Resume the run after fixing any errors with:
 
 ```
-nextflow run nf-core/sarek -profile singularity -c config/new.config -resume
+nextflow run nf-core/sarek -r 3.0.1 -profile singularity -c config/new.config -resume
 ```
