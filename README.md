@@ -81,8 +81,8 @@ working_directory/
 │   └── beartooth.config
 ├── REAME.md
 ├── resources/
-│   ├── GCA_014549065.1_CCar_1.0_genomic.fna
-│   └── samplesheet.csv
+    ├── GCA_014549065.1_CCar_1.0_genomic.fna
+    └── samplesheet.csv
 ```
 
 This can be set up in any way if you alter the file paths in `beartooth.config`. Then, change into the working directory, and you're ready to proceed.
