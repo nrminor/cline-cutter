@@ -63,7 +63,7 @@ If you are using Beartooth yourself, this config file also includes a number of 
 
 #### The Sample Sheet
 
-The input file required by SAREK is a CSV spreadsheet with the following columns:
+The input file required by Sarek is a CSV spreadsheet with the following columns:
 
 ```
 patient,sample,lane,fastq_1,fastq_2
