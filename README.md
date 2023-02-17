@@ -89,7 +89,7 @@ This can be set up in any way if you alter the file paths in `beartooth.config`.
 
 #### Running in the background
 
-Usually, I use the Nextflow flag `-bg` to run the pipeline in the background, which is akin to using `screen` on Linux. This ensures that the pipeline will run to finish, even if your computer goes to sleep, your multi-factor authentication expires (this happens all the time on ARCC resources), the cluster has an outage, or some other disruption takes place.
+Usually, I use the Nextflow flag `-bg` to run the pipeline in the background, which is akin to using `screen` on Linux. This ensures that the pipeline will run to finish, even if your computer goes to sleep, your multi-factor authentication expires (this happens all the time on ARCC resources), or some other disruption takes place.
 
 To run the workflow in the background, use:
 
