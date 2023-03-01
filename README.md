@@ -79,7 +79,7 @@ Finally, to run the pipeline with my configuration, I set up my working director
 working_directory/
 ├── config/
 │   └── beartooth.config
-├── REAME.md
+├── README.md
 ├── resources/
     ├── GCA_014549065.1_CCar_1.0_genomic.fna
     └── samplesheet.csv
