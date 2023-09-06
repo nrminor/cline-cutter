@@ -1,0 +1,13 @@
+deprecated/
+results_*/
+results/
+.nextflow/
+.vscode/
+work/
+resources/GCA_014549065.1_CCar_1.0_genomic.fna
+
+.DS_Store
+.Rhistory
+._*
+.nextflow.log*
+.nextflow.pid*
