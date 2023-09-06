@@ -44,12 +44,16 @@ workflow {
         CONVERT_AND_INDEX.out.bai.collect()
     )
 
+	RUN_DOWNSAMPLING (
+		VARIANT_CALL.out
+	)
+
     RUN_ADMIXTURE (
-        VARIANT_CALL.out
+        RUN_DOWNSAMPLING.out.flatten()
     )
 
     VCF_FILTERING (
-        VARIANT_CALL.out
+        RUN_DOWNSAMPLING.out.flatten()
     )
 
     SNP_THINNING (
@@ -188,6 +192,35 @@ process VARIANT_CALL {
 	script:
 	"""
 	"""
+}
+
+process RUN_DOWNSAMPLING {
+	
+	/*
+    This process does something described here
+    */
+	
+	tag "${tag}"
+	publishDir params.results, mode: 'copy'
+
+	cpus 4
+	
+	input:
+	path vcf
+	
+	output:
+	path "*.vcf"
+	
+	script:
+	"""
+	sample-by-coordinate.py \
+	--vcf ${vcf} \
+	--metadata ${params.sample_metadata} \
+	--distance_threshold 100 \
+	--cores ${task.cpus} \
+	--seed 14
+	"""
+
 }
 
 process RUN_ADMIXTURE {
