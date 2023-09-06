@@ -12,6 +12,7 @@ workflow {
 	// input channels
     ch_reads = Channel
         .fromPath( "${params.input_dir}/*.fastq.gz" )
+		.collect()
 
     ch_seeds = Channel
         .from( params.random_seeds )
@@ -75,7 +76,7 @@ workflow {
     )
 
     FIT_CLINE_MODELS (
-        RUN_ENTROPY.out.collect(),
+        RUN_ENTROPY.out,
         ch_sample_csv
     )
 	
