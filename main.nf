@@ -19,35 +19,49 @@ workflow {
         .splitCsv( header: false )
         .flatten()
     
-    ch_sample_csv = Channel
-        .fromPath( "${params.sample_csv_dir}/*.csv" )
-        .collect()
+    ch_sample_meta = Channel
+        .fromPath( params.samplesheet )
 	
 	
 	// Workflow steps 
-    DEMULTIPLEX_READS (
-        ch_reads
-    )
+	if ( params.precalled_vcf == "" ){
 
-    INDEX_FOR_MAPPING ()
+		DEMULTIPLEX_READS (
+			ch_reads
+		)
 
-    MAP_WITH_BWA (
-        DEMULTIPLEX_READS.out.flatten(),
-        INDEX_FOR_MAPPING.out
-    )
+		INDEX_FOR_MAPPING ()
 
-    CONVERT_AND_INDEX (
-        MAP_WITH_BWA.out
-    )
+		MAP_WITH_BWA (
+			DEMULTIPLEX_READS.out.flatten(),
+			INDEX_FOR_MAPPING.out
+		)
 
-    VARIANT_CALL (
-        CONVERT_AND_INDEX.out.bam.collect(),
-        CONVERT_AND_INDEX.out.bai.collect()
-    )
+		CONVERT_AND_INDEX (
+			MAP_WITH_BWA.out
+		)
 
-	RUN_DOWNSAMPLING (
-		VARIANT_CALL.out
-	)
+		VARIANT_CALL (
+			CONVERT_AND_INDEX.out.bam.collect(),
+			CONVERT_AND_INDEX.out.bai.collect()
+		)
+
+		RUN_DOWNSAMPLING (
+			VARIANT_CALL.out,
+			ch_sample_meta
+		)
+
+	} else {
+
+		ch_vcf = Channel
+			.fromPath( params.precalled_vcf )
+		
+		RUN_DOWNSAMPLING (
+			ch_vcf,
+			ch_sample_meta
+		)
+
+	}
 
     RUN_ADMIXTURE (
         RUN_DOWNSAMPLING.out.flatten()
@@ -65,6 +79,10 @@ workflow {
         SNP_THINNING.out
     )
 
+	CREATE_Q_PRIORS (
+		FILTER_INDIVS.out
+	)
+
     CONVERT_TO_MPGL (
         FILTER_INDIVS.out
     )
@@ -72,12 +90,12 @@ workflow {
     RUN_ENTROPY (
         ch_seeds,
         CONVERT_TO_MPGL.out,
-        RUN_ADMIXTURE.out.q
+        CREATE_Q_PRIORS.out.collect()
     )
 
     FIT_CLINE_MODELS (
         RUN_ENTROPY.out,
-        ch_sample_csv
+        ch_sample_meta
     )
 	
 	
@@ -208,6 +226,7 @@ process RUN_DOWNSAMPLING {
 	
 	input:
 	path vcf
+	path samplesheet
 	
 	output:
 	path "*.vcf"
@@ -216,7 +235,7 @@ process RUN_DOWNSAMPLING {
 	"""
 	sample-by-coordinate.py \
 	--vcf ${vcf} \
-	--metadata ${params.sample_metadata} \
+	--metadata ${samplesheet} \
 	--distance_threshold 100 \
 	--cores ${task.cpus} \
 	--seed 14
@@ -315,6 +334,35 @@ process FILTER_INDIVS {
 
 }
 
+process CREATE_Q_PRIORS {
+	
+	/*
+    This process does something described here
+    */
+	
+	tag "${tag}"
+	publishDir params.results, mode: 'copy'
+
+    cpus 1
+	
+	input:
+	path vcf
+	
+	output:
+	path "*.mpgl"
+	
+	shell:
+	'''
+	N=${bcftools query -l !{vcf} | wc -l}
+	touch starting_q.txt
+	for (( i=1; i<=$num_rows; i++ ))
+	do
+		echo "0.5" >> "$output_file"
+	done
+	'''
+
+}
+
 process CONVERT_TO_MPGL {
 	
 	/*
@@ -353,15 +401,17 @@ process RUN_ENTROPY {
 	input:
     each val(random_seed)
 	path mpgl
-    path starting_q
+    path starting_qs
 	
 	output:
 	path "*.hdf5"
 	
 	script:
+	subsample = file(mpgl.toString()).getSimpleName()
+	q_file = "${subsample}_q.txt"
 	"""
 	entropy -i ${mpgl} \
-    -r ${random_seed} -q ${starting_q} \
+    -r ${random_seed} -q ${q_file} \
     -m 1 -n 2 -k 2 -w 1 -Q 1 -l 120000 -b 30000 -t 30 \
     -o ${params.project_name}.hdf5
 	"""
@@ -381,10 +431,10 @@ process FIT_CLINE_MODELS {
 	
 	input:
 	path hdf5
-    path sample_csvs
+    path samplesheet
 	
 	output:
-	
+	path "*.pdf"
 	
 	script:
 	"""
