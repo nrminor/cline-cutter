@@ -63,10 +63,6 @@ workflow {
 
 	}
 
-    RUN_ADMIXTURE (
-        RUN_DOWNSAMPLING.out.flatten()
-    )
-
     VCF_FILTERING (
         RUN_DOWNSAMPLING.out.flatten()
     )
@@ -79,22 +75,31 @@ workflow {
         SNP_THINNING.out
     )
 
+    // CONVERT_TO_STRUCTURE (
+    //     FILTER_INDIVS.out
+    // )
+
+	// RUN_ADMIXTURE (
+	// 	ch_seeds,
+	// 	CONVERT_TO_STRUCTURE.out
+	// )
+
 	CREATE_Q_PRIORS (
 		FILTER_INDIVS.out
 	)
 
     CONVERT_TO_MPGL (
-        FILTER_INDIVS.out
+        CREATE_Q_PRIORS.out
     )
 
     RUN_ENTROPY (
         ch_seeds,
-        CONVERT_TO_MPGL.out,
-        CREATE_Q_PRIORS.out.collect()
+        CONVERT_TO_MPGL.out
     )
 
     FIT_CLINE_MODELS (
-        RUN_ENTROPY.out,
+		// RUN_ADMIXTURE.out.collect(),
+        RUN_ENTROPY.out.groupTuple(),
         ch_sample_meta
     )
 	
@@ -243,25 +248,6 @@ process RUN_DOWNSAMPLING {
 
 }
 
-process RUN_ADMIXTURE {
-	
-	/*
-    This process does something described here
-    */
-	
-	tag "${tag}"
-	publishDir params.results, mode: 'copy'
-	
-	input:
-	
-	output:
-	
-	script:
-	"""
-	"""
-
-}
-
 process VCF_FILTERING {
 	
 	/*
@@ -328,11 +314,64 @@ process FILTER_INDIVS {
 	"""
 	vcftools --vcf ${vcf} --missing-indv
     awk '$5 >= 0.7 {print $1}' out.imiss > individuals_to_remove.txt
-    vcftools --vcf $vcf --remove individuals_to_remove.txt --recode --recode-INFO-all \
+    vcftools --vcf ${vcf} --remove individuals_to_remove.txt \
+	--recode --recode-INFO-all \
     --out ${params.project_name}_final
 	"""
 
 }
+
+// process CONVERT_TO_STRUCTURE {
+	
+// 	/*
+//     This process does something described here
+//     */
+	
+// 	tag "${tag}"
+// 	publishDir params.results, mode: 'copy'
+	
+// 	input:
+// 	path vcf
+	
+// 	output:
+// 	path "*.str"
+	
+// 	script:
+// 	subsample = file(vcf.toString()).getSimpleName()
+// 	"""
+// 	pgdspider \
+// 	-inputfile ${vcf} \
+// 	-inputformat VCF \
+// 	-outputfile ${subsample}.str \
+// 	-outputformat STRUCTURE \
+// 	-spid ${spid_template}
+// 	"""
+
+// }
+
+// process RUN_ADMIXTURE {
+	
+// 	/*
+//     This process does something described here
+//     */
+	
+// 	tag "${subsample}"
+// 	publishDir params.results, mode: 'copy'
+	
+// 	input:
+// 	val seed
+// 	path str
+	
+// 	output:
+// 	path "*.hdf5"
+
+// 	script:
+// 	subsample = file(vcf.toString()).getSimpleName()
+// 	"""
+// 	structure -D ${seed} -K 2 -m mainparams -o ${params.project_name}
+// 	"""
+
+// }
 
 process CREATE_Q_PRIORS {
 	
@@ -349,7 +388,7 @@ process CREATE_Q_PRIORS {
 	path vcf
 	
 	output:
-	path "*.mpgl"
+	tuple path(vcf), path("*.txt")
 	
 	shell:
 	'''
@@ -357,7 +396,7 @@ process CREATE_Q_PRIORS {
 	touch starting_q.txt
 	for (( i=1; i<=$num_rows; i++ ))
 	do
-		echo "0.5" >> "$output_file"
+		echo "0.5" >> "starting_q.txt"
 	done
 	'''
 
@@ -375,10 +414,10 @@ process CONVERT_TO_MPGL {
     cpus 1
 	
 	input:
-	path vcf
+	tuple path(vcf), path(starting_q)
 	
 	output:
-	path "*.mpgl"
+	tuple path("*.mpgl"), path(starting_q)
 	
 	script:
 	"""
@@ -400,18 +439,16 @@ process RUN_ENTROPY {
 	
 	input:
     each val(random_seed)
-	path mpgl
-    path starting_qs
+	tuple path(mpgl), path(starting_q)
 	
 	output:
-	path "*.hdf5"
+	tuple val(subsample), path("*.hdf5")
 	
 	script:
 	subsample = file(mpgl.toString()).getSimpleName()
-	q_file = "${subsample}_q.txt"
 	"""
 	entropy -i ${mpgl} \
-    -r ${random_seed} -q ${q_file} \
+    -r ${random_seed} -q ${starting_q} \
     -m 1 -n 2 -k 2 -w 1 -Q 1 -l 120000 -b 30000 -t 30 \
     -o ${params.project_name}.hdf5
 	"""
@@ -430,7 +467,7 @@ process FIT_CLINE_MODELS {
     cpus 1
 	
 	input:
-	path hdf5
+	tuple val(subsample), tuple(path(hdf5_1), path(hdf5_2), path(hdf5_3)) 
     path samplesheet
 	
 	output:
