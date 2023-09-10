@@ -63,6 +63,10 @@ workflow {
 
 	}
 
+	// CREATE_POP_MAPS (
+	// 	ch_sample_meta
+	// )
+
     VCF_FILTERING (
         RUN_DOWNSAMPLING.out.flatten()
     )
@@ -76,10 +80,11 @@ workflow {
     )
 
     // CONVERT_TO_STRUCTURE (
-    //     FILTER_INDIVS.out
+    //     FILTER_INDIVS.out,
+	// 	CREATE_POP_MAPS.out
     // )
 
-	// RUN_ADMIXTURE (
+	// RUN_STRUCTURE (
 	// 	ch_seeds,
 	// 	CONVERT_TO_STRUCTURE.out
 	// )
@@ -98,7 +103,7 @@ workflow {
     )
 
     FIT_CLINE_MODELS (
-		// RUN_ADMIXTURE.out.collect(),
+		// RUN_STRUCTURE.out.collect(),
         RUN_ENTROPY.out.groupTuple(),
         ch_sample_meta
     )
@@ -248,6 +253,28 @@ process RUN_DOWNSAMPLING {
 
 }
 
+// process CREATE_POP_MAPS {
+	
+// 	/*
+//     This process does something described here
+//     */
+	
+// 	tag "${tag}"
+// 	publishDir params.results, mode: 'copy'
+	
+// 	input:
+// 	path samplesheet
+	
+// 	output:
+// 	path "*.pop"
+	
+// 	script:
+// 	"""
+// 	create-pop-map.py ${samplesheet} ${params.project_name}
+// 	"""
+
+// }
+
 process VCF_FILTERING {
 	
 	/*
@@ -332,6 +359,7 @@ process FILTER_INDIVS {
 	
 // 	input:
 // 	path vcf
+// 	path pop_map
 	
 // 	output:
 // 	path "*.str"
@@ -349,7 +377,7 @@ process FILTER_INDIVS {
 
 // }
 
-// process RUN_ADMIXTURE {
+// process RUN_STRUCTURE {
 	
 // 	/*
 //     This process does something described here
@@ -450,7 +478,7 @@ process RUN_ENTROPY {
 	entropy -i ${mpgl} \
     -r ${random_seed} -q ${starting_q} \
     -m 1 -n 2 -k 2 -w 1 -Q 1 -l 120000 -b 30000 -t 30 \
-    -o ${params.project_name}.hdf5
+    -o ${params.project_name}_${seed}.hdf5
 	"""
 
 }
