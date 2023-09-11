@@ -62,7 +62,7 @@ workflow {
 	}
 
     VCF_FILTERING (
-        RUN_DOWNSAMPLING.out.vcf.flatten()
+        RUN_DOWNSAMPLING.out.vcf
     )
 
     SNP_THINNING (
@@ -87,7 +87,7 @@ workflow {
     )
 
     FIT_CLINE_MODELS (
-        RUN_ENTROPY.out.groupTuple().view(),
+        RUN_ENTROPY.out.groupTuple(),
         ch_sample_meta,
 		RUN_DOWNSAMPLING.out.txt.collect()
     )
@@ -270,10 +270,11 @@ process VCF_FILTERING {
 	path "*.vcf"
 	
 	script:
+	subsample = file(vcf.toString()).replace("_sample.recode.vcf", "")
 	"""
 	vcftools --vcf ${vcf} --min-alleles 2 --max-alleles 2 \
     --maf 0.05 --max-missing 0.7 --recode --recode-INFO-all \
-    --out ${params.project_name}
+    --out ${params.project_name}_${subsample}
 	"""
 
 }
@@ -291,12 +292,13 @@ process SNP_THINNING {
 	path vcf
 	
 	output:
-	path "*.vcf"
+	tuple path("*.vcf"), val(simple_name)
 	
 	script:
+	simple_name = = file(vcf.toString()).getSimpleName()
 	"""
 	vcftools --vcf ${vcf} --thin 20000 --recode --recode-INFO-all \
-    --out ${params.project_name}_thinned
+    --out ${simple_name}_thinned
 	"""
 
 }
@@ -310,7 +312,7 @@ process FILTER_INDIVS {
 	publishDir params.no_missing, mode: 'copy'
 	
 	input:
-	path vcf
+	tuple path(vcf), val(simple_name)
 	
 	output:
 	path "*.vcf"
@@ -321,7 +323,7 @@ process FILTER_INDIVS {
     awk '$5 >= 0.7 {print $1}' out.imiss > individuals_to_remove.txt
     vcftools --vcf !{vcf} --remove individuals_to_remove.txt \
 	--recode --recode-INFO-all \
-    --out !{params.project_name}_final
+    --out !{simple_name}_no_missing
 	'''
 
 }
