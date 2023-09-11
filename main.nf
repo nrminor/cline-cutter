@@ -104,6 +104,26 @@ workflow {
 // --------------------------------------------------------------- //
 // Additional parameters that are derived from parameters set in nextflow.config
 
+// Demultiplexed FASTQ files
+params.demux = params.results + "/1_demux"
+
+// Alignments
+params.alignments = params.results + "/2_alignments"
+
+// VCF files
+params.variants = params.results + "/3_VCF_files"
+
+// VCFs sub-results
+params.downsampled = params.variants + "/1_downsampled"
+params.filtered = params.variants + "/2_filtered"
+params.thinned = params.variants + "/3_thinned"
+params.no_missing = params.variants + "/4_no_missing_indiv"
+
+// Analyses and visualizations
+params.analyses = params.results + "/4_analyses"
+params.entropy = params.analyses + "/1_entropy"
+params.clines = params.analyses + "/2_clines"
+
 // --------------------------------------------------------------- //
 
 
@@ -119,7 +139,7 @@ process DEMULTIPLEX_READS {
     */
 	
 	tag "${tag}"
-	publishDir params.results, mode: 'copy'
+	publishDir params.demux, mode: 'copy'
 	
 	input:
 	
@@ -138,7 +158,6 @@ process INDEX_FOR_MAPPING {
     */
 	
 	tag "${tag}"
-	publishDir params.results, mode: 'copy'
 	
 	input:
 	
@@ -156,7 +175,6 @@ process MAP_WITH_BWA {
     */
 	
 	tag "${tag}"
-	publishDir params.results, mode: 'copy'
 
     cpus 8
 	
@@ -176,7 +194,7 @@ process CONVERT_AND_INDEX {
     */
 	
 	tag "${tag}"
-	publishDir params.results, mode: 'copy'
+	publishDir params.alignments, mode: 'copy'
 
     cpus 4
 	
@@ -196,7 +214,7 @@ process VARIANT_CALL {
     */
 	
 	tag "${tag}"
-	publishDir params.results, mode: 'copy'
+	publishDir params.variants, mode: 'copy'
 
     cpus 8
 	
@@ -216,7 +234,7 @@ process RUN_DOWNSAMPLING {
     */
 	
 	tag "${tag}"
-	publishDir params.results, mode: 'copy'
+	publishDir params.downsampled, mode: 'copy'
 
 	cpus 4
 	
@@ -247,7 +265,7 @@ process VCF_FILTERING {
     */
 	
 	tag "${tag}"
-	publishDir params.results, mode: 'copy'
+	publishDir params.filtered, mode: 'copy'
 	
 	input:
 	path vcf
@@ -271,7 +289,7 @@ process SNP_THINNING {
     */
 	
 	tag "${tag}"
-	publishDir params.results, mode: 'copy'
+	publishDir params.thinned, mode: 'copy'
 	
 	input:
 	path vcf
@@ -293,8 +311,7 @@ process FILTER_INDIVS {
     This process does something described here
     */
 	
-	tag "${tag}"
-	publishDir params.results, mode: 'copy'
+	publishDir params.no_missing, mode: 'copy'
 	
 	input:
 	path vcf
@@ -318,9 +335,6 @@ process CREATE_Q_PRIORS {
 	/*
     This process does something described here
     */
-	
-	tag "${tag}"
-	publishDir params.results, mode: 'copy'
 
     cpus 1
 	
@@ -348,8 +362,7 @@ process CONVERT_TO_MPGL {
     This process does something described here
     */
 	
-	tag "${tag}"
-	publishDir params.results, mode: 'copy'
+	publishDir params.entropy, mode: 'copy'
 
     cpus 1
 	
@@ -372,8 +385,8 @@ process RUN_ENTROPY {
     This process does something described here
     */
 	
-	tag "${tag}"
-	publishDir params.results, mode: 'copy'
+	tag "${subsample}"
+	publishDir params.entropy, mode: 'copy'
 
     cpus 1
 	
@@ -401,8 +414,8 @@ process FIT_CLINE_MODELS {
     This process does something described here
     */
 	
-	tag "${tag}"
-	publishDir params.results, mode: 'copy'
+	tag "${subsample}"
+	publishDir params.clines, mode: 'copy'
 
     cpus 1
 	
@@ -417,7 +430,7 @@ process FIT_CLINE_MODELS {
 	script:
 	subset_file = "${subsample}_sample.txt"
 	"""
-	cline_fitting.R ${hdf5}
+	cline_fitting.R ${samplesheet} ${subset_file} ${hdf5_1} ${hdf5_2} ${hdf5_3}
 	"""
 
 }

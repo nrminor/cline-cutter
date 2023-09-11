@@ -82,9 +82,11 @@ RUN mamba install -y -n base -c conda-forge -c r -c bioconda r-base \
     r-forcats \
     r-sp \
     r-vcfr \
-    r-mass
+    r-mass \
+    r-devtools \
+    bioconductor-rhdf5
 
-RUN Rscript -e "install.packages('hzar', repos = 'https://cloud.r-project.org/', lib='/opt/conda/lib/R/library')"
+RUN Rscript -e "devtools::install_github('GrahamDB/hzar', repos = 'https://cloud.r-project.org/', lib='/opt/conda/lib/R/library', clean = TRUE)"
 
 # install biology-specific CLI packages
 RUN mamba install -y -n base -c defaults -c bioconda -c conda-forge \
@@ -93,7 +95,7 @@ RUN mamba install -y -n base -c defaults -c bioconda -c conda-forge \
     bcftools \
     vcftools \
     bwa \
-    nextflow
+    popgen-entropy
 
 # make sure shells are bash
 CMD ["/bin/bash"]
