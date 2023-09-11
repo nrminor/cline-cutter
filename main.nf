@@ -346,7 +346,7 @@ process CREATE_Q_PRIORS {
 	'''
 	N=${bcftools query -l !{vcf} | wc -l}
 	touch starting_q.txt
-	for (( i=1; i<=$num_rows; i++ ))
+	for (( i=1; i<=$N; i++ ))
 	do
 		echo "0.5" >> "starting_q.txt"
 	done
