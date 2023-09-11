@@ -295,7 +295,7 @@ process SNP_THINNING {
 	tuple path("*.vcf"), val(simple_name)
 	
 	script:
-	simple_name = = file(vcf.toString()).getSimpleName()
+	simple_name = file(vcf.toString()).getSimpleName()
 	"""
 	vcftools --vcf ${vcf} --thin 20000 --recode --recode-INFO-all \
     --out ${simple_name}_thinned
