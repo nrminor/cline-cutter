@@ -90,6 +90,7 @@ RUN Rscript -e "devtools::install_github('GrahamDB/hzar', repos = 'https://cloud
 
 # install biology-specific CLI packages
 RUN mamba install -y -n base -c defaults -c bioconda -c conda-forge \
+    xlsx2csv \
     csvkit \
     samtools \
     bcftools \
