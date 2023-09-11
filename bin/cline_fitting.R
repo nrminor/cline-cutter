@@ -72,13 +72,11 @@ plot(q ~ Longitude, data=site_ancestry)
 # --------------------------------------------------------------------------- #
 
 
-#### OLD DISTANCE PROCEDURE ####
+#### COLLATE DISTANCES ####
 # --------------------------------------------------------------------------- #
-## reading in distance dataset
-distance<-read.csv("/Users/nickminor/Library/Mobile Documents/com~apple~CloudDocs/Documents/RESEARCH/nrm_experiments/0023/resources/collection_coords.csv")
 
 # aggregating mean longitude by population
-distances <- aggregate(Longitude ~ Population, data=distance, mean)
+distances <- aggregate(Longitude ~ Population, data=metadata, mean)
 
 plot(Population~Longitude, data = distances)
 
