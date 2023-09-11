@@ -62,7 +62,7 @@ workflow {
 	}
 
     VCF_FILTERING (
-        RUN_DOWNSAMPLING.out.vcf
+        RUN_DOWNSAMPLING.out.vcf.flatten()
     )
 
     SNP_THINNING (
