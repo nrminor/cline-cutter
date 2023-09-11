@@ -270,7 +270,7 @@ process VCF_FILTERING {
 	path "*.vcf"
 	
 	script:
-	subsample = file(vcf.toString()).replace("_sample.recode.vcf", "")
+	subsample = file(vcf.toString()).getSimpleName().replace("_sample", "")
 	"""
 	vcftools --vcf ${vcf} --min-alleles 2 --max-alleles 2 \
     --maf 0.05 --max-missing 0.7 --recode --recode-INFO-all \
