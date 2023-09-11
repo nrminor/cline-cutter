@@ -12,6 +12,7 @@ require(geosphere)
 require(hzar)
 require(viridis)
 require(readr)
+require(stringr)
 require(dplyr)
 require(readxl)
 require(forcats)
@@ -32,6 +33,10 @@ hdf5_3 <- args[5]
 
 #### LOAD METADATA ####
 # --------------------------------------------------------------------------- #
+
+# identify downsample regime 
+downsample_regime <- str_remove(samples_path, "_samples.txt")
+
 metadata <- read_excel(meta_path, trim_ws = TRUE)
 subset <- read_tsv(samples_path, col_names = "Sample ID",
                    show_col_types = FALSE,  trim_ws = TRUE)
@@ -315,7 +320,7 @@ print(hzar.AICc.hzar.obsDataGroup(Q_oDG))
 
 
 #### plot clines
-pdf(file="q_cline.pdf")
+pdf(file=paste(downsample_regime, "q_cline.pdf", sep = "_"))
 hzar.plot.fzCline(Q_model_fixed_noneData, fzCol = rgb(68/255, 1/255, 84/255, 0.3), pch = 20, col=rgb(68/255, 1/255, 84/255, 0.7), xlab = "Distance (km)", ylab = "Q value")
 dev.off()
 print(Q_model_fixed_noneData$ML.cline$param.free$center)
@@ -391,7 +396,7 @@ fzCoor <- fzCline$fzCline(xSeries)
 ### plot the polygons and lines
 # the stats::line() function uses the x and y coordinates from above to draw the line
 
-pdf(file = "centered_clines.pdf")
+pdf(file = paste(downsample_regime, "centered_clines.pdf", sep = "_"))
 
 # first create an empty plot bounded by the biggest dataset
 hzar.plot.obsData(Q_centered_model_fixed_noneData, col = "transparent")
