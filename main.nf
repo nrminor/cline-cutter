@@ -15,9 +15,7 @@ workflow {
 		.collect()
 
     ch_seeds = Channel
-        .from( params.random_seeds )
-        .splitCsv( header: false )
-        .flatten()
+        .of( 1, 2, 3 )
     
     ch_sample_meta = Channel
         .fromPath( params.samplesheet )
@@ -89,7 +87,7 @@ workflow {
     )
 
     FIT_CLINE_MODELS (
-        RUN_ENTROPY.out.groupTuple(),
+        RUN_ENTROPY.out.groupTuple().view(),
         ch_sample_meta,
 		RUN_DOWNSAMPLING.out.txt.collect()
     )
@@ -233,7 +231,6 @@ process RUN_DOWNSAMPLING {
     This process does something described here
     */
 	
-	tag "${tag}"
 	publishDir params.downsampled, mode: 'copy'
 
 	cpus 4
@@ -264,7 +261,6 @@ process VCF_FILTERING {
     This process does something described here
     */
 	
-	tag "${tag}"
 	publishDir params.filtered, mode: 'copy'
 	
 	input:
@@ -391,7 +387,7 @@ process RUN_ENTROPY {
     cpus 1
 	
 	input:
-    each val(random_seed)
+    each random_seed
 	tuple path(mpgl), path(starting_q)
 	
 	output:
@@ -420,7 +416,7 @@ process FIT_CLINE_MODELS {
     cpus 1
 	
 	input:
-	tuple val(subsample), tuple(path(hdf5_1), path(hdf5_2), path(hdf5_3)) 
+	tuple val(subsample), path(hdf5_1), path(hdf5_2), path(hdf5_3)
     path samplesheet
 	path subset_files
 	
