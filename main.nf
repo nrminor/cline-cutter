@@ -319,14 +319,14 @@ process FILTER_INDIVS {
 	output:
 	path "*.vcf"
 	
-	script:
-	"""
-	vcftools --vcf ${vcf} --missing-indv
+	shell:
+	'''
+	vcftools --vcf !{vcf} --missing-indv
     awk '$5 >= 0.7 {print $1}' out.imiss > individuals_to_remove.txt
-    vcftools --vcf ${vcf} --remove individuals_to_remove.txt \
+    vcftools --vcf !{vcf} --remove individuals_to_remove.txt \
 	--recode --recode-INFO-all \
-    --out ${params.project_name}_final
-	"""
+    --out !{params.project_name}_final
+	'''
 
 }
 
