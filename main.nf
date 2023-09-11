@@ -63,12 +63,8 @@ workflow {
 
 	}
 
-	// CREATE_POP_MAPS (
-	// 	ch_sample_meta
-	// )
-
     VCF_FILTERING (
-        RUN_DOWNSAMPLING.out.flatten()
+        RUN_DOWNSAMPLING.out.vcf.flatten()
     )
 
     SNP_THINNING (
@@ -78,16 +74,6 @@ workflow {
     FILTER_INDIVS (
         SNP_THINNING.out
     )
-
-    // CONVERT_TO_STRUCTURE (
-    //     FILTER_INDIVS.out,
-	// 	CREATE_POP_MAPS.out
-    // )
-
-	// RUN_STRUCTURE (
-	// 	ch_seeds,
-	// 	CONVERT_TO_STRUCTURE.out
-	// )
 
 	CREATE_Q_PRIORS (
 		FILTER_INDIVS.out
@@ -103,9 +89,9 @@ workflow {
     )
 
     FIT_CLINE_MODELS (
-		// RUN_STRUCTURE.out.collect(),
         RUN_ENTROPY.out.groupTuple(),
-        ch_sample_meta
+        ch_sample_meta,
+		RUN_DOWNSAMPLING.out.txt.collect()
     )
 	
 	
@@ -239,7 +225,8 @@ process RUN_DOWNSAMPLING {
 	path samplesheet
 	
 	output:
-	path "*.vcf"
+	path "*.vcf", emit: vcf
+	path "*.txt", emit: txt
 	
 	script:
 	"""
@@ -252,28 +239,6 @@ process RUN_DOWNSAMPLING {
 	"""
 
 }
-
-// process CREATE_POP_MAPS {
-	
-// 	/*
-//     This process does something described here
-//     */
-	
-// 	tag "${tag}"
-// 	publishDir params.results, mode: 'copy'
-	
-// 	input:
-// 	path samplesheet
-	
-// 	output:
-// 	path "*.pop"
-	
-// 	script:
-// 	"""
-// 	create-pop-map.py ${samplesheet} ${params.project_name}
-// 	"""
-
-// }
 
 process VCF_FILTERING {
 	
@@ -347,59 +312,6 @@ process FILTER_INDIVS {
 	"""
 
 }
-
-// process CONVERT_TO_STRUCTURE {
-	
-// 	/*
-//     This process does something described here
-//     */
-	
-// 	tag "${tag}"
-// 	publishDir params.results, mode: 'copy'
-	
-// 	input:
-// 	path vcf
-// 	path pop_map
-	
-// 	output:
-// 	path "*.str"
-	
-// 	script:
-// 	subsample = file(vcf.toString()).getSimpleName()
-// 	"""
-// 	pgdspider \
-// 	-inputfile ${vcf} \
-// 	-inputformat VCF \
-// 	-outputfile ${subsample}.str \
-// 	-outputformat STRUCTURE \
-// 	-spid ${spid_template}
-// 	"""
-
-// }
-
-// process RUN_STRUCTURE {
-	
-// 	/*
-//     This process does something described here
-//     */
-	
-// 	tag "${subsample}"
-// 	publishDir params.results, mode: 'copy'
-	
-// 	input:
-// 	val seed
-// 	path str
-	
-// 	output:
-// 	path "*.hdf5"
-
-// 	script:
-// 	subsample = file(vcf.toString()).getSimpleName()
-// 	"""
-// 	structure -D ${seed} -K 2 -m mainparams -o ${params.project_name}
-// 	"""
-
-// }
 
 process CREATE_Q_PRIORS {
 	
@@ -497,11 +409,13 @@ process FIT_CLINE_MODELS {
 	input:
 	tuple val(subsample), tuple(path(hdf5_1), path(hdf5_2), path(hdf5_3)) 
     path samplesheet
+	path subset_files
 	
 	output:
 	path "*.pdf"
 	
 	script:
+	subset_file = "${subsample}_sample.txt"
 	"""
 	cline_fitting.R ${hdf5}
 	"""
