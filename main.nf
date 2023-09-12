@@ -233,6 +233,7 @@ process RUN_DOWNSAMPLING {
 	publishDir params.downsampled, mode: 'copy'
 
 	cpus 4
+	time '6h'
 	
 	input:
 	path vcf
@@ -261,6 +262,8 @@ process VCF_FILTERING {
     */
 	
 	publishDir params.filtered, mode: 'copy'
+
+	time '6h'
 	
 	input:
 	path vcf
@@ -285,6 +288,8 @@ process SNP_THINNING {
     */
 	
 	publishDir params.thinned, mode: 'copy'
+
+	time '1h'
 	
 	input:
 	path vcf
@@ -308,6 +313,8 @@ process FILTER_INDIVS {
     */
 	
 	publishDir params.no_missing, mode: 'copy'
+
+	time '1h'
 	
 	input:
 	tuple path(vcf), val(simple_name)
@@ -333,6 +340,7 @@ process CREATE_Q_PRIORS {
     */
 
     cpus 1
+	time '10m'
 	
 	input:
 	path vcf
@@ -361,6 +369,7 @@ process CONVERT_TO_MPGL {
 	publishDir params.entropy, mode: 'copy'
 
     cpus 1
+	time '1h'
 	
 	input:
 	tuple path(vcf), path(starting_q)
@@ -385,6 +394,7 @@ process RUN_ENTROPY {
 	publishDir params.entropy, mode: 'copy'
 
     cpus 1
+	time '10d'
 	
 	input:
     each random_seed
@@ -414,6 +424,7 @@ process FIT_CLINE_MODELS {
 	publishDir params.clines, mode: 'copy'
 
     cpus 1
+	time '8h'
 	
 	input:
 	tuple val(subsample), path(hdf5_1), path(hdf5_2), path(hdf5_3)
