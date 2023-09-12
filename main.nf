@@ -135,8 +135,7 @@ process DEMULTIPLEX_READS {
 	/*
     This process does something described here
     */
-	
-	tag "${tag}"
+
 	publishDir params.demux, mode: 'copy'
 	
 	input:
@@ -155,7 +154,7 @@ process INDEX_FOR_MAPPING {
     This process does something described here
     */
 	
-	tag "${tag}"
+	tag "${sample}"
 	
 	input:
 	
@@ -172,7 +171,7 @@ process MAP_WITH_BWA {
     This process does something described here
     */
 	
-	tag "${tag}"
+	tag "${sample}"
 
     cpus 8
 	
@@ -191,7 +190,7 @@ process CONVERT_AND_INDEX {
     This process does something described here
     */
 	
-	tag "${tag}"
+	tag "${sample}"
 	publishDir params.alignments, mode: 'copy'
 
     cpus 4
@@ -285,7 +284,6 @@ process SNP_THINNING {
     This process does something described here
     */
 	
-	tag "${tag}"
 	publishDir params.thinned, mode: 'copy'
 	
 	input:
@@ -344,7 +342,7 @@ process CREATE_Q_PRIORS {
 	
 	shell:
 	'''
-	N=${bcftools query -l !{vcf} | wc -l}
+	N=$(bcftools query -l !{vcf} | wc -l)
 	touch starting_q.txt
 	for (( i=1; i<=$N; i++ ))
 	do
