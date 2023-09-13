@@ -394,7 +394,7 @@ process RUN_ENTROPY {
 	publishDir params.entropy, mode: 'copy'
 
     cpus 1
-	time '10d'
+	time '7d'
 	
 	input:
     each random_seed
