@@ -87,8 +87,9 @@ workflow {
     )
 
     FIT_CLINE_MODELS (
-        RUN_ENTROPY.out.groupTuple()
-			.map { tuple( sample, tuple( hdf5_1, hdf5_2, hdf5_3 ) ) -> tuple( sample, hdf5_1, hdf5_2, hdf5_3 ) },
+        RUN_ENTROPY.out
+			.groupTuple( sort: true )
+			.map { sample, hdf5s -> [ sample, hdf5s.flatten() ] },
         ch_sample_meta,
 		RUN_DOWNSAMPLING.out.txt.collect()
     )
