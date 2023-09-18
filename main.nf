@@ -439,7 +439,7 @@ process FIT_CLINE_MODELS {
 	script:
 	subset_file = "${subsample}_sample.txt"
 	"""
-	cline_fitting.R ${samplesheet} ${subset_file} ${hdf5_1} ${hdf5_2} ${hdf5_3}
+	cline_fitting.R ${samplesheet} ${subset_file}
 	"""
 
 }

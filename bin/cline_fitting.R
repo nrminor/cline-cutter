@@ -19,16 +19,20 @@ require(forcats)
 require(rhdf5)
 
 #### INPUT PATHS ####
-if (length(args) < 5) {
-  stop("Some required command line arguments are missing. 5 in total, a \
-       metadata path, a text file of the samples present in this dataset, \
-       and three hdf5 paths, must be provided.")
+if (length(args) < 2) {
+  stop("Some required command line arguments are missing. A \
+       metadata path and a text file of the samples present in this dataset \
+       are required.")
 }
 meta_path <- args[1]
 samples_path <- args[2]
-hdf5_1 <- args[3]
-hdf5_2 <- args[4]
-hdf5_3 <- args[5]
+hdf_5_files <- sort(list.files(",", ".hdf5"))
+if (length(hdf_5_files) < 3) {
+  stop("3 hdf5 replicates must be provided in the current working directory.")
+}
+hdf5_1 <- hdf_5_files[1]
+hdf5_2 <- hdf_5_files[2]
+hdf5_3 <- hdf_5_files[3]
 
 
 #### LOAD METADATA ####
