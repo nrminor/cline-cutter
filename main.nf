@@ -411,7 +411,7 @@ process RUN_ENTROPY {
 	entropy -i ${mpgl} \
     -r ${random_seed} -q ${starting_q} \
     -m 1 -n 2 -k 2 -w 1 -Q 1 -l 120000 -b 30000 -t 30 \
-    -o ${params.project_name}_${random_seed}.hdf5
+    -o ${subsample}_${random_seed}.hdf5
 	"""
 
 }
