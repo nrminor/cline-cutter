@@ -431,7 +431,7 @@ process FIT_CLINE_MODELS {
 	input:
 	tuple val(subsample), path(hdf5_1), path(hdf5_2), path(hdf5_3)
     each path(samplesheet)
-	each path(subset_files)
+	path subset_files
 	
 	output:
 	path "*.pdf"
