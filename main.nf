@@ -44,9 +44,8 @@ workflow {
 			CONVERT_AND_INDEX.out.bai.collect()
 		)
 
-		RUN_DOWNSAMPLING (
-			VARIANT_CALL.out,
-			ch_sample_meta
+		VCF_FILTERING (
+			VARIANT_CALL.out
 		)
 
 	} else {
@@ -59,10 +58,6 @@ workflow {
 		)
 
 	}
-
-    VCF_FILTERING (
-        RUN_DOWNSAMPLING.out.vcf.flatten()
-    )
 
     SNP_THINNING (
         VCF_FILTERING.out
