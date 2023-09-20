@@ -437,9 +437,8 @@ process FIT_CLINE_MODELS {
 	path "*.pdf"
 	
 	script:
-	subset_file = "${subsample}_sample.txt"
 	"""
-	cline_fitting.R ${samplesheet} ${subset_file}
+	cline_fitting.R ${samplesheet}
 	"""
 
 }

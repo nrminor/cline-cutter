@@ -19,13 +19,11 @@ require(forcats)
 require(rhdf5)
 
 #### INPUT PATHS ####
-if (length(args) < 2) {
-  stop("Some required command line arguments are missing. A \
-       metadata path and a text file of the samples present in this dataset \
-       are required.")
+if (length(args) == 0) {
+  stop("A required command line arguments is missing. A \
+       metadata path is required.")
 }
 meta_path <- args[1]
-samples_path <- args[2]
 hdf_5_files <- sort(list.files(".", ".hdf5"))
 if (length(hdf_5_files) < 3) {
   stop("3 hdf5 replicates must be provided in the current working directory.")
@@ -38,8 +36,15 @@ hdf5_3 <- hdf_5_files[3]
 #### LOAD METADATA ####
 # --------------------------------------------------------------------------- #
 
-# identify downsample regime 
-downsample_regime <- str_remove(samples_path, "_samples.txt")
+# identify downsample regime
+if (grepl("random", hdf5_1)) {
+  downsample_regime <- "random"
+} else if (grepl("uneven", hdf5_1)) {
+  downsample_regime <- "uneven"
+} else {
+  downsample_regime <- "even"
+}
+samples_path <- paste(downsample_regime, "_sample.txt", sep = "")
 
 metadata <- read_excel(meta_path, trim_ws = TRUE)
 subset <- read_tsv(samples_path, col_names = "Sample ID",
