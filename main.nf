@@ -53,10 +53,9 @@ workflow {
 
 		ch_vcf = Channel
 			.fromPath( params.precalled_vcf )
-		
-		RUN_DOWNSAMPLING (
-			ch_vcf,
-			ch_sample_meta
+
+		VCF_FILTERING (
+			ch_vcf
 		)
 
 	}
@@ -73,8 +72,13 @@ workflow {
         SNP_THINNING.out
     )
 
+	RUN_DOWNSAMPLING (
+		FILTER_INDIVS.out,
+		ch_sample_meta
+	)
+
 	CREATE_Q_PRIORS (
-		FILTER_INDIVS.out
+		RUN_DOWNSAMPLING.out.vcf.flatten()
 	)
 
     CONVERT_TO_MPGL (
@@ -114,10 +118,10 @@ params.alignments = params.results + "/2_alignments"
 params.variants = params.results + "/3_VCF_files"
 
 // VCFs sub-results
-params.downsampled = params.variants + "/1_downsampled"
-params.filtered = params.variants + "/2_filtered"
-params.thinned = params.variants + "/3_thinned"
-params.no_missing = params.variants + "/4_no_missing_indiv"
+params.filtered = params.variants + "/1_filtered"
+params.thinned = params.variants + "/2_thinned"
+params.no_missing = params.variants + "/3_no_missing_indiv"
+params.downsampled = params.variants + "/4_downsampled"
 
 // Analyses and visualizations
 params.analyses = params.results + "/4_analyses"
@@ -226,37 +230,6 @@ process VARIANT_CALL {
 	"""
 }
 
-process RUN_DOWNSAMPLING {
-	
-	/*
-    This process does something described here
-    */
-	
-	publishDir params.downsampled, mode: 'copy'
-
-	cpus 4
-	time '6h'
-	
-	input:
-	path vcf
-	path samplesheet
-	
-	output:
-	path "*.vcf", emit: vcf
-	path "*.txt", emit: txt
-	
-	script:
-	"""
-	sample-by-coordinate.py \
-	--vcf ${vcf} \
-	--metadata ${samplesheet} \
-	--distance_threshold 100 \
-	--cores ${task.cpus} \
-	--seed 14
-	"""
-
-}
-
 process VCF_FILTERING {
 	
 	/*
@@ -332,6 +305,38 @@ process FILTER_INDIVS {
 	--recode --recode-INFO-all \
     --out !{simple_name}_no_missing
 	'''
+
+}
+
+process RUN_DOWNSAMPLING {
+	
+	/*
+    This process does something described here
+    */
+	
+	publishDir params.downsampled, mode: 'copy'
+
+	cpus 4
+	time '6h'
+	
+	input:
+	path vcf
+	path samplesheet
+	
+	output:
+	path "*.vcf", emit: vcf
+	path "*.txt", emit: txt
+	
+	script:
+	"""
+	sample-by-coordinate.py \
+	--vcf ${vcf} \
+	--proportion 0.8 \
+	--metadata ${samplesheet} \
+	--distance_threshold 100 \
+	--cores ${task.cpus} \
+	--seed 14
+	"""
 
 }
 
