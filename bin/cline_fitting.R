@@ -26,7 +26,7 @@ if (length(args) < 2) {
 }
 meta_path <- args[1]
 samples_path <- args[2]
-hdf_5_files <- sort(list.files(",", ".hdf5"))
+hdf_5_files <- sort(list.files(".", ".hdf5"))
 if (length(hdf_5_files) < 3) {
   stop("3 hdf5 replicates must be provided in the current working directory.")
 }
