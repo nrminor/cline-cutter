@@ -5,18 +5,27 @@
 # retrieve positional command line arguments
 args <- commandArgs(TRUE)
 
-# libraries
-require(ggplot2)
-require(sp)
-require(geosphere)
-require(hzar)
-require(viridis)
-require(readr)
-require(stringr)
-require(dplyr)
-require(readxl)
-require(forcats)
-require(rhdf5)
+options(warn = 1)
+
+suppressPackageStartupMessages({
+  
+  # libraries
+  require(ggplot2)
+  require(sp)
+  require(geosphere)
+  require(hzar)
+  require(viridis)
+  require(readr)
+  require(stringr)
+  require(dplyr)
+  require(readxl)
+  require(forcats)
+  require(rhdf5)
+  
+  # print package versions
+  sessioninfo::session_info("attached")
+
+})
 
 #### INPUT PATHS ####
 if (length(args) == 0) {
@@ -282,31 +291,31 @@ Q_modelNull <- hzar.dataGroup.null(Q)
 
 ##make list of cline models and null models
 Q_dGs <- list(cline_free_bothModel = Q_model_free_bothData,
-                  cline_free_leftModel = Q_model_free_leftData,
-                  cline_free_rightModel = Q_model_free_rightData,
-                  cline_free_mirrorModel = Q_model_free_mirrorData,
-                  cline_free_noneModel = Q_model_free_noneData,
-                  cline_fixed_bothModel = Q_model_fixed_bothData,
-                  cline_fixed_leftModel = Q_model_fixed_leftData,
-                  cline_fixed_rightModel = Q_model_fixed_rightData,
-                  cline_fixed_mirrorModel = Q_model_fixed_mirrorData,
-                  cline_fixed_noneModel = Q_model_fixed_noneData,
-                  cline_none_bothModel = Q_model_none_bothData,
-                  cline_none_leftModel = Q_model_none_leftData,
-                  cline_none_rightModel = Q_model_none_rightData,
-                  cline_none_mirrorModel = Q_model_none_mirrorData,
-                  cline_none_noneModel = Q_model_none_noneData,
-                           nullModel = Q_modelNull)
+              cline_free_leftModel = Q_model_free_leftData,
+              cline_free_rightModel = Q_model_free_rightData,
+              cline_free_mirrorModel = Q_model_free_mirrorData,
+              cline_free_noneModel = Q_model_free_noneData,
+              cline_fixed_bothModel = Q_model_fixed_bothData,
+              cline_fixed_leftModel = Q_model_fixed_leftData,
+              cline_fixed_rightModel = Q_model_fixed_rightData,
+              cline_fixed_mirrorModel = Q_model_fixed_mirrorData,
+              cline_fixed_noneModel = Q_model_fixed_noneData,
+              cline_none_bothModel = Q_model_none_bothData,
+              cline_none_leftModel = Q_model_none_leftData,
+              cline_none_rightModel = Q_model_none_rightData,
+              cline_none_mirrorModel = Q_model_none_mirrorData,
+              cline_none_noneModel = Q_model_none_noneData,
+              nullModel = Q_modelNull)
 
 ### Collect optimizer output based on the same hzar.obsData object
 Q_oDG <- hzar.make.obsDataGroup(Q_dGs)
- 
+
 ### Set the names of the list of hzar.dataGroup objects contained in a hzar.obsDataGroup object using the names from either a named list of hzar.dataGroup objects or another hzar.obsDataGroup object.
 Q_oDG <- hzar.copyModelLabels(Q_dGs,Q_oDG)
- 
+
 ### Plots a line representing the expected frequency versus distance for the given object. For hzar.dataGroup and hzar.obsDataGroup objects, plots the observed data backing the model. For hzar.obsDataGroup objects, plots the maximum likelihood cline for each model.
 hzar.plot.cline(Q_oDG)
- 
+
 ### Calculate the AIC or corrected AIC score table for the given hzar.obsDataGroup object. There will be one score generated for each model associated with this object.
 print(hzar.AICc.hzar.obsDataGroup(Q_oDG))
 #                             AICc
