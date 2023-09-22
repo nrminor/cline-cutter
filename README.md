@@ -1,1 +1,1 @@
-# UWYO Thesis Project - Take 2
+# Stress-testing population genomic cline modeling with downsampling - Take 2
