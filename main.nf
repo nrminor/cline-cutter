@@ -72,6 +72,10 @@ workflow {
 		ch_sample_meta
 	)
 
+	RECORD_FINAL_ROSTER (
+		RUN_DOWNSAMPLING.out.vcf.flatten()
+	)
+
 	CREATE_Q_PRIORS (
 		RUN_DOWNSAMPLING.out.vcf.flatten()
 	)
@@ -90,7 +94,7 @@ workflow {
 			.groupTuple( sort: true )
 			.map { sample, hdf5s -> tuple( sample, hdf5s[0], hdf5s[1], hdf5s[2] ) },
         ch_sample_meta
-			.mix(RUN_DOWNSAMPLING.out.txt.collect())
+			.mix(RECORD_FINAL_ROSTER.out.collect())
 			.collect()	
     )
 	
@@ -332,6 +336,30 @@ process RUN_DOWNSAMPLING {
 	--distance_threshold 100 \
 	--cores ${task.cpus} \
 	--seed 14
+	"""
+
+}
+
+process RECORD_FINAL_ROSTER {
+
+	/*
+	*/
+	
+	publishDir params.downsampled, mode: 'copy'
+
+	cpus 1
+	time '10m'
+
+	input:
+	path vcf
+
+	output:
+	path "*.txt"
+
+	script:
+	downsampling_regime = file(vcf.toString()).getSimpleName()
+	"""
+	bcftools query -l ${vcf} > ${downsampling_regime}.txt
 	"""
 
 }

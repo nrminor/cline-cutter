@@ -59,18 +59,22 @@ if (grepl("random", hdf5_1)) {
 samples_path <- paste(downsample_regime, "_sample.txt", sep = "")
 
 metadata <- read_excel(meta_path, trim_ws = TRUE)
-subset <- read_tsv(samples_path, col_names = "Sample ID",
-                   show_col_types = FALSE,  trim_ws = TRUE)
 
 # filter to the current subset and remove space from first colname
-metadata <- subset %>%
+metadata <- read_tsv(samples_path, col_names = "Sample ID",
+                     show_col_types = FALSE,  trim_ws = TRUE) %>%
   left_join(metadata, by = "Sample ID", keep = FALSE) %>%
   rename(SampleID = `Sample ID`)
 
+stopifnot(all(metadata$Latitude > 0) || all(metadata$Latitude < 0))
+stopifnot(all(metadata$Longitude > 0) || all(metadata$Longitude < 0))
+
 # rename to conform with Paul's conventions
+metadata$SampleID <- regmatches(metadata$SampleID,
+                                regexpr("[[:digit:]]*", metadata$SampleID))
 sample_ids <- metadata[,"SampleID"]
-sample_ids$SampleID <- regmatches(sample_ids$SampleID, regexpr("[[:digit:]]*", sample_ids$SampleID))
-sample_coords <- metadata
+sample_coords <- metadata %>%
+  select(SampleID, Latitude, Longitude)
 
 # --------------------------------------------------------------------------- #
 
@@ -93,7 +97,7 @@ sample_ids$q <- q_means
 sample_ids <- merge(sample_ids,sample_coords, by = "SampleID", sort=FALSE)
 
 ##could we also look at the frequency of interspecific ancestry in certain areas over time?
-site_ancestry <- aggregate(q ~ Longitude, data=sample_ids, mean)
+site_ancestry <- aggregate(q ~ Longitude, data = sample_ids, mean)
 plot(q ~ Longitude, data=site_ancestry)
 # --------------------------------------------------------------------------- #
 
@@ -131,9 +135,6 @@ plot(q ~ distance, data=cline)
 
 cline$q <- 1-cline$q
 plot(q ~ distance, data=cline)
-
-
-# need to comment out all the models except the one chosen by AICc for easier plug n chug
 
 
 #### CLINE MODELING STEPS
@@ -341,9 +342,9 @@ print(hzar.AICc.hzar.obsDataGroup(Q_oDG))
 
 
 #### plot clines
-pdf(file=paste(downsample_regime, "q_cline.pdf", sep = "_"))
-hzar.plot.fzCline(Q_model_fixed_noneData, fzCol = rgb(68/255, 1/255, 84/255, 0.3), pch = 20, col=rgb(68/255, 1/255, 84/255, 0.7), xlab = "Distance (km)", ylab = "Q value")
-dev.off()
+# pdf(file=paste(downsample_regime, "q_cline.pdf", sep = "_"))
+# hzar.plot.fzCline(Q_model_fixed_noneData, fzCol = rgb(68/255, 1/255, 84/255, 0.3), pch = 20, col=rgb(68/255, 1/255, 84/255, 0.7), xlab = "Distance (km)", ylab = "Q value")
+# dev.off()
 print(Q_model_fixed_noneData$ML.cline$param.free$center)
 #[1] 0.8665297
 print(Q_model_fixed_noneData$ML.cline$param.free$width)
@@ -406,8 +407,9 @@ print(hzar.getLLCutParam(Q_centered_model_fixed_noneData,c("center","width")))
 # the numbers are from hzar, no relation to my observations being 108 in caor
 xSeries <- seq(from = par("usr")[1], to = par("usr")[2], 
                length.out = 109)
-if (par("xaxs") == "r") 
+if (par("xaxs") == "r") {
   xSeries <- xSeries[2:108]
+}
 
 # hzar.plot.fzCline() plots the 95% CI using graphics::polygon() 
 # you can customize the colours here
