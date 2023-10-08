@@ -29,10 +29,13 @@ suppressPackageStartupMessages({
 
 #### INPUT PATHS ####
 if (length(args) == 0) {
-  stop("A required command line arguments is missing. A \
-       metadata path is required.")
+  meta_path <- "samplesheet.xlsx"
+} else {
+  meta_path <- args[1]
 }
-meta_path <- args[1]
+if (!(meta_path %in% list.files("."))) {
+  stop("A metadata file is required.")
+}
 hdf_5_files <- sort(list.files(".", ".hdf5"))
 if (length(hdf_5_files) < 3) {
   stop("3 hdf5 replicates must be provided in the current working directory.")

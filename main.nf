@@ -89,8 +89,9 @@ workflow {
         RUN_ENTROPY.out
 			.groupTuple( sort: true )
 			.map { sample, hdf5s -> tuple( sample, hdf5s[0], hdf5s[1], hdf5s[2] ) },
-        ch_sample_meta,
-		RUN_DOWNSAMPLING.out.txt.collect()
+        ch_sample_meta
+			.mix(RUN_DOWNSAMPLING.out.txt.collect())
+			.collect()	
     )
 	
 	
@@ -430,15 +431,14 @@ process FIT_CLINE_MODELS {
 	
 	input:
 	tuple val(subsample), path(hdf5_1), path(hdf5_2), path(hdf5_3)
-    each path(samplesheet)
-	path subset_files
+    each path(metadata_files)
 	
 	output:
 	path "*.pdf"
 	
 	script:
 	"""
-	cline_fitting.R ${samplesheet}
+	cline_fitting.R
 	"""
 
 }
