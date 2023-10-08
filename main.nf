@@ -325,7 +325,6 @@ process RUN_DOWNSAMPLING {
 	
 	output:
 	path "*.vcf", emit: vcf
-	path "*.txt", emit: txt
 	
 	script:
 	"""

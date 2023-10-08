@@ -318,7 +318,7 @@ Q_oDG <- hzar.make.obsDataGroup(Q_dGs)
 Q_oDG <- hzar.copyModelLabels(Q_dGs,Q_oDG)
 
 ### Plots a line representing the expected frequency versus distance for the given object. For hzar.dataGroup and hzar.obsDataGroup objects, plots the observed data backing the model. For hzar.obsDataGroup objects, plots the maximum likelihood cline for each model.
-hzar.plot.cline(Q_oDG)
+# hzar.plot.cline(Q_oDG)
 
 ### Calculate the AIC or corrected AIC score table for the given hzar.obsDataGroup object. There will be one score generated for each model associated with this object.
 print(hzar.AICc.hzar.obsDataGroup(Q_oDG))
