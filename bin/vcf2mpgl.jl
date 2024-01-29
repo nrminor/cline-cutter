@@ -1,6 +1,6 @@
 #!/usr/bin/env -S julia --threads auto --gcthreads 3
 
-using Base.Threads, VariantCallFormat, VCFTools, CSV, DataFrames, Revise
+using Base.Threads, VariantCallFormat, VCFTools, CSV, DataFrames
 
 
 """
@@ -112,13 +112,13 @@ function write_mpgl(header::EntropyHeader, mpgl_df::DataFrame, name_prefix::Stri
     output_name = "$name_prefix.mpgl"
 
     # start with the header
-    open("tmp.mpgl", "w") do writer
+    open("$name_prefix.tmp.mpgl", "w") do writer
         println(writer, header.line1)
         println(writer, header.line2)
     end
 
     # finish with the table data
-    open("tmp.mpgl", "a") do appender
+    open("$name_prefix.tmp.mpgl", "a") do appender
         CSV.write(
             appender, mpgl_df;
             append=true, delim=' ', quotestrings=false, writeheader=false
@@ -126,14 +126,14 @@ function write_mpgl(header::EntropyHeader, mpgl_df::DataFrame, name_prefix::Stri
     end
 
     # remove quotes
-    open("tmp.mpgl", "r") do reader
+    open("$name_prefix.tmp.mpgl", "r") do reader
         open(output_name, "w") do writer
             for line in eachline(reader)
                 println(writer, replace(line, "\"" => ""))
             end
         end
     end
-    rm("tmp.mpgl")
+    rm("$name_prefix.tmp.mpgl")
 
 end
 
@@ -164,7 +164,7 @@ function convert_all_files()
         simple_name = replace(vcf_file, ".vcf" => "")
 
         # write out the new file
-        write_mpgl(header, mpgl_df, simple_name)
+        @async write_mpgl(header, mpgl_df, simple_name)
     end
 
 end ; convert_all_files()
