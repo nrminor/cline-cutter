@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "cline-cutter"
+version = "0.1.0"
+description = "Stress-testing Passerina bunting cline analysis with spatially even and uneven downsampling"
+authors = ["Nicholas Minor <nrminor@wisc.edu>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+polars = "^0.20.6"
+numpy = "^1.26.3"
+geopy = "^2.4.1"
+scipy = "^1.12.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
