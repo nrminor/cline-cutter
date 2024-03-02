@@ -299,9 +299,16 @@ process FILTER_INDIVS {
 	
 	shell:
 	'''
+	# find individuals where all sites are marked as missing
 	vcftools --vcf !{vcf} --missing-indv
+
+	# parse those into a simple text file
     awk '$5 >= 0.7 {print $1}' out.imiss > individuals_to_remove.txt
-    vcftools --vcf !{vcf} --remove individuals_to_remove.txt \
+    
+	# use vcftools again to remove individuals in the all-missing txt file
+	vcftools \
+	--vcf !{vcf} \
+	--remove individuals_to_remove.txt \
 	--recode --recode-INFO-all \
     --out !{simple_name}_no_missing
 	'''
@@ -444,6 +451,8 @@ process RUN_ENTROPY {
 
 }
 
+// process VISUALIZE_ENTROPY_TRACE {}
+
 process FIT_CLINE_MODELS {
 	
 	/*
@@ -469,5 +478,7 @@ process FIT_CLINE_MODELS {
 	"""
 
 }
+
+process REPORT_MODEL_PERFORMANCE {}
 
 // --------------------------------------------------------------- //

@@ -58,12 +58,11 @@ if (grepl("random", hdf5_1)) {
 }
 samples_path <- paste(downsample_regime, "_sample.txt", sep = "")
 
-metadata <- read_excel(meta_path, trim_ws = TRUE)
-
 # filter to the current subset and remove space from first colname
 metadata <- read_tsv(samples_path, col_names = "Sample ID",
                      show_col_types = FALSE,  trim_ws = TRUE) %>%
-  left_join(metadata, by = "Sample ID", keep = FALSE) %>%
+  left_join(read_excel(meta_path, trim_ws = TRUE),
+            by = "Sample ID", keep = FALSE) %>%
   rename(SampleID = `Sample ID`)
 
 stopifnot(all(metadata$Latitude > 0) || all(metadata$Latitude < 0))
@@ -79,7 +78,7 @@ sample_coords <- metadata %>%
 # --------------------------------------------------------------------------- #
 
 
-#### LOAD HDF5 FILES ####
+#### LOAD HDF5 FILES WITH ANCESTRY/HYBRID SCORES ####
 # --------------------------------------------------------------------------- #
 qrep1 <- h5read(hdf5_1,"q")
 qrep2 <- h5read(hdf5_2,"q")
@@ -88,13 +87,13 @@ q1_mat <- qrep1[,1,]
 q2_mat <- qrep2[,1,]
 q3_mat <- qrep3[,1,]
 q_long <- rbind(q1_mat,q2_mat,q3_mat)
-q_means <- apply(q_long,2,mean)
+q_means <- apply(q_long, 2, mean)
 
 # merging sample id and gbs data
 sample_ids$q <- q_means
 
 # merging dataframes by sample id
-sample_ids <- merge(sample_ids,sample_coords, by = "SampleID", sort=FALSE)
+sample_ids <- merge(sample_ids, sample_coords, by = "SampleID", sort = FALSE)
 
 ##could we also look at the frequency of interspecific ancestry in certain areas over time?
 site_ancestry <- aggregate(q ~ Longitude, data = sample_ids, mean)
