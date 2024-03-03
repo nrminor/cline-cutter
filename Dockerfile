@@ -107,12 +107,10 @@ RUN mkdir /opt/entropy && \
     cd /opt/entropy && \
     unzip 246ccf1003c4.zip && \
     cd buerklelab-mixedploidy-entropy-246ccf1003c4 && \
-    chmod +x *.pl && \
-    chmod +x auxfiles/*.pl && \
-    chmod +x auxfiles/*.R && \
-    chmod +x auxfiles/*.sh && \
-    chmod +x simfiles/diploid/*.R && \
-    chmod +x simfiles/diploid/*.py
+    find . -type f -name "*.pl" -print0 | xargs -0 chmod +x && \
+    find . -type f -name "*.sh" -print0 | xargs -0 chmod +x && \
+    find . -type f -name "*.py" -print0 | xargs -0 chmod +x && \
+    find . -type f -name "*.R" -print0 | xargs -0 chmod +x
 ENV PATH $PATH:/opt/entropy/buerklelab-mixedploidy-entropy-246ccf1003c4:/opt/entropy/auxfiles/buerklelab-mixedploidy-entropy-246ccf1003c4:/opt/entropy/buerklelab-mixedploidy-entropy-246ccf1003c4/simfiles/diploid
 
 # Install Julia
