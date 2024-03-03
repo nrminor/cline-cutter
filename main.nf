@@ -416,7 +416,7 @@ process CONVERT_TO_MPGL {
 
 	script:
 	"""
-	vcf2mpgl.R ${vcf}
+	vcf2mpgl.jl ${vcf}
 	"""
 
 }

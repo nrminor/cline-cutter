@@ -1,10 +1,11 @@
 #!/usr/bin/env -S julia --threads auto --gcthreads 3
 
-using Base.Threads, VariantCallFormat, VCFTools, CSV, DataFrames
+using CSV, DataFrames, VariantCallFormat, VCFTools
+using Base.Threads: @threads
 
 
 """
-The struct `DatasetInfo` holds metadata about the VCF-formatted 
+The struct `DatasetInfo` holds metadata about the VCF-formatted
 dataset as a whole, including the number of markers (L), the sample
 size (N), a 1-dimensional array of sample IDs, and the ploidy of
 the species represented.
@@ -86,7 +87,7 @@ function vcf_to_mpgl(vcf_file::String, ploidy::Int64)
     # initialize the structs to bundle data
     vcf_meta = DatasetInfo(
         n_loci,
-        sample_size, 
+        sample_size,
         sample_ids,
         ploidy,
     )
@@ -156,7 +157,7 @@ function convert_all_files()
     vcf_files = vcf_files[sortperm(vcf_sizes)]
 
     # process each available VCF
-    Threads.@threads for vcf_file in vcf_files
+    @threads for vcf_file in vcf_files
         # convert to MPGL dataframe
         header, mpgl_df = vcf_to_mpgl(vcf_file, 2)
 
@@ -167,4 +168,6 @@ function convert_all_files()
         @async write_mpgl(header, mpgl_df, simple_name)
     end
 
-end ; convert_all_files()
+end
+
+convert_all_files()

@@ -98,5 +98,17 @@ RUN mamba install -y -n base -c defaults -c bioconda -c conda-forge \
     bwa \
     popgen-entropy
 
+# Install Julia
+RUN curl -fsSL https://install.julialang.org | sh
+
+# Copy Julia dependencies to precompile as a module
+ENV JULIA_DEPOT_PATH=/root/.julia
+ENV JULIA_SCRATCH_TRACK_ACCESS=0
+COPY Project.toml /root/.julia/environments/v1.9/Project.toml
+COPY Manifest.toml /root/.julia/environments/v1.9/Manifest.toml
+RUN julia -e 'using Pkg; \
+            Pkg.activate(joinpath(DEPOT_PATH[1], "environments", "v1.9")); \
+            Pkg.instantiate();'
+
 # make sure shells are bash
 CMD ["/bin/bash"]
