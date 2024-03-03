@@ -475,7 +475,7 @@ process FIT_CLINE_MODELS {
 	script:
 	"""
 	cline_fitting.R && \
-	log_parsing.jl ${subsample} .command.log
+	collate_model_evals.jl "${subsample}" ".command.log"
 	"""
 
 }

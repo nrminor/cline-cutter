@@ -21,6 +21,7 @@ suppressPackageStartupMessages({
   require(readxl)
   require(forcats)
   require(rhdf5)
+  require(SimDesign)
 
   # print package versions
   sessioninfo::session_info("attached")
@@ -28,10 +29,18 @@ suppressPackageStartupMessages({
 })
 
 #### INPUT PATHS ####
-if (length(args) == 0) {
+if (is.function(args)) {
   meta_path <- "samplesheet.xlsx"
+  interactive <- TRUE
+  print("Running interactively.")
+} else if (length(args) == 0) {
+  meta_path <- "samplesheet.xlsx"
+  interactive <- FALSE
+  print("Running non-interactively.")
 } else {
   meta_path <- args[1]
+  interactive <- FALSE
+  print("Running non-interactively.")
 }
 if (!(meta_path %in% list.files("."))) {
   stop("A metadata file is required.")
@@ -110,7 +119,7 @@ pdf(paste(downsample_regime, "regime_q_by_longitude.pdf", sep = "_"),
     height = 6, width = 9)
 plot(q ~ Longitude, data = site_ancestry, pch = 16)
 grid()
-dev.off()
+dev.off() |> invisible()
 # --------------------------------------------------------------------------- #
 
 
@@ -121,8 +130,10 @@ dev.off()
 # aggregating mean longitude by population
 distances <- aggregate(Longitude ~ Population, data = metadata, mean)
 
-plot(Population ~ Longitude, data = distances, pch = 16)
-grid()
+if (interactive == TRUE) {
+  plot(Population ~ Longitude, data = distances, pch = 16)
+  grid()
+}
 
 ### converting longitudinal points to distance along transect first need to
 ### know mean latitude of sampling locations
@@ -137,8 +148,10 @@ distances <- distances %>%
 
 # merging genomic hybrid index for every sample with distances
 sample_ids_distance <- merge(sample_ids, distances, by = "Population")
-plot(q ~ distance, data = sample_ids_distance)
-grid()
+if (interactive == TRUE) {
+  plot(q ~ distance, data = sample_ids_distance)
+  grid()
+}
 
 ## need to get a dataset of mean q and bird count at each site for both
 ## collection datasets
@@ -149,9 +162,11 @@ cline <- merge(site_ancestry, site_counts)
 
 # need to flip q values for one dataset so the cline will be in the same
 # direction
-plot(q ~ distance, data = cline, xlab = "inter-population distance",
-     ylab = "Q score", pch = 16)
-grid()
+if (interactive == TRUE) {
+  plot(q ~ distance, data = cline, xlab = "inter-population distance",
+       ylab = "Q score", pch = 16)
+  grid()
+}
 
 # cline$q <- 1 - cline$q plot(q ~ distance, data = cline)
 
@@ -162,260 +177,239 @@ grid()
 Q <- hzar.doMolecularData1DPops(cline$distance, cline$q, cline$SampleID)
 
 ### Plot the associated observed frequency versus distance
-hzar.plot.obsData(Q)
+if (interactive == TRUE) {
+  hzar.plot.obsData(Q)
+}
 
-# nest all modeling objects in a function to avoid polluting the global scope
-fit_cline_models <- compiler::cmpfun(function(Q) {
+### Construct a clineMetaModel object for use with
+### hzar.first.fitRequest.old.ML
+{
+  Q_model_free_both <- hzar.makeCline1DFreq(Q, scaling = "free", tails = "both")
+  Q_model_free_none <- hzar.makeCline1DFreq(Q, scaling = "free", tails = "none")
+  Q_model_free_right <- hzar.makeCline1DFreq(Q, scaling = "free", tails = "right")
+  Q_model_free_left <- hzar.makeCline1DFreq(Q, scaling = "free", tails = "left")
+  Q_model_free_mirror <- hzar.makeCline1DFreq(Q, scaling = "free", tails = "mirror")
 
-  ### Construct a clineMetaModel object for use with
-  ### hzar.first.fitRequest.old.ML
-  {
-    Q_model_free_both <- hzar.makeCline1DFreq(Q, scaling = "free",
-                                              tails = "both")
-    Q_model_free_none <- hzar.makeCline1DFreq(Q, scaling = "free",
-                                              tails = "none")
-    Q_model_free_right <- hzar.makeCline1DFreq(Q, scaling = "free",
-                                               tails = "right")
-    Q_model_free_left <- hzar.makeCline1DFreq(Q, scaling = "free",
-                                              tails = "left")
-    Q_model_free_mirror <- hzar.makeCline1DFreq(Q, scaling = "free",
-                                                tails = "mirror")
-    # #
-    Q_model_fixed_both <- hzar.makeCline1DFreq(Q, scaling = "fixed",
-                                               tails = "both")
-    Q_model_fixed_none <- hzar.makeCline1DFreq(Q, scaling = "fixed",
-                                               tails = "none")
-    Q_model_fixed_right <- hzar.makeCline1DFreq(Q, scaling = "fixed",
-                                                tails = "right")
-    Q_model_fixed_left <- hzar.makeCline1DFreq(Q, scaling = "fixed",
-                                               tails = "left")
-    Q_model_fixed_mirror <- hzar.makeCline1DFreq(Q, scaling = "fixed",
-                                                 tails = "mirror")
-    # #
-    Q_model_none_both <- hzar.makeCline1DFreq(Q, scaling = "none",
-                                              tails = "both")
-    Q_model_none_none <- hzar.makeCline1DFreq(Q, scaling = "none",
-                                              tails = "none")
-    Q_model_none_right <- hzar.makeCline1DFreq(Q, scaling = "none",
-                                               tails = "right")
-    Q_model_none_left <- hzar.makeCline1DFreq(Q, scaling = "none",
-                                              tails = "left")
-    Q_model_none_mirror <- hzar.makeCline1DFreq(Q, scaling = "none",
-                                                tails = "mirror")
-  }
+  # #
+  Q_model_fixed_both <- hzar.makeCline1DFreq(Q, scaling = "fixed", tails = "both")
+  Q_model_fixed_none <- hzar.makeCline1DFreq(Q, scaling = "fixed", tails = "none")
+  Q_model_fixed_right <- hzar.makeCline1DFreq(Q, scaling = "fixed", tails = "right")
+  Q_model_fixed_left <- hzar.makeCline1DFreq(Q, scaling = "fixed", tails = "left")
+  Q_model_fixed_mirror <- hzar.makeCline1DFreq(Q, scaling = "fixed", tails = "mirror")
+
+  # #
+  Q_model_none_both <- hzar.makeCline1DFreq(Q, scaling = "none", tails = "both")
+  Q_model_none_none <- hzar.makeCline1DFreq(Q, scaling = "none", tails = "none")
+  Q_model_none_right <- hzar.makeCline1DFreq(Q, scaling = "none", tails = "right")
+  Q_model_none_left <- hzar.makeCline1DFreq(Q, scaling = "none", tails = "left")
+  Q_model_none_mirror <- hzar.makeCline1DFreq(Q, scaling = "none", tails = "mirror")
+}
 
 
-  ### The intent of these methods is to assist the optimizer in exploring the
-  ### model parameter space by instructing it to ignore models that are not
-  ### interesting. For example, if all of the sampled localities are in a
-  ### region 100km wide, then a cline width of 110km is probably not
-  ### interesting. A cline width of 500km in that scenario would definitely
-  ### not be interesting at all.
-  {
-    Q_model_free_both <- hzar.model.addBoxReq(Q_model_free_both, -100, 900)
-    Q_model_free_left <- hzar.model.addBoxReq(Q_model_free_left, -100, 900)
-    S1_22a_model_free_right <- hzar.model.addBoxReq(Q_model_free_right, -100, 900)
-    S1_22a_model_free_mirror <- hzar.model.addBoxReq(Q_model_free_mirror, -100, 900)
-    S1_22a_model_free_none <- hzar.model.addBoxReq(Q_model_free_none, -100, 900)
+### The intent of these methods is to assist the optimizer in exploring the
+### model parameter space by instructing it to ignore models that are not
+### interesting. For example, if all of the sampled localities are in a
+### region 100km wide, then a cline width of 110km is probably not
+### interesting. A cline width of 500km in that scenario would definitely
+### not be interesting at all.
+{
+  Q_model_free_both <- hzar.model.addBoxReq(Q_model_free_both, -100, 900)
+  Q_model_free_left <- hzar.model.addBoxReq(Q_model_free_left, -100, 900)
+  S1_22a_model_free_right <- hzar.model.addBoxReq(Q_model_free_right, -100, 900)
+  S1_22a_model_free_mirror <- hzar.model.addBoxReq(Q_model_free_mirror, -100, 900)
+  S1_22a_model_free_none <- hzar.model.addBoxReq(Q_model_free_none, -100, 900)
 
-    Q_model_fixed_both <- hzar.model.addBoxReq(Q_model_fixed_both, -100, 900)
-    Q_model_fixed_left <- hzar.model.addBoxReq(Q_model_fixed_left, -100, 900)
-    Q_model_fixed_right <- hzar.model.addBoxReq(Q_model_fixed_right, -100, 900)
-    Q_model_fixed_mirror <- hzar.model.addBoxReq(Q_model_fixed_mirror, -100, 900)
-    Q_model_fixed_none <- hzar.model.addBoxReq(Q_model_fixed_none, -100, 900)
+  Q_model_fixed_both <- hzar.model.addBoxReq(Q_model_fixed_both, -100, 900)
+  Q_model_fixed_left <- hzar.model.addBoxReq(Q_model_fixed_left, -100, 900)
+  Q_model_fixed_right <- hzar.model.addBoxReq(Q_model_fixed_right, -100, 900)
+  Q_model_fixed_mirror <- hzar.model.addBoxReq(Q_model_fixed_mirror, -100, 900)
+  Q_model_fixed_none <- hzar.model.addBoxReq(Q_model_fixed_none, -100, 900)
 
-    Q_model_none_both <- hzar.model.addBoxReq(Q_model_none_both, -100, 900)
-    Q_model_none_left <- hzar.model.addBoxReq(Q_model_none_left, -100, 900)
-    Q_model_none_right <- hzar.model.addBoxReq(Q_model_none_right, -100, 900)
-    Q_model_none_mirror <- hzar.model.addBoxReq(Q_model_none_mirror, -100, 900)
-    Q_model_none_none <- hzar.model.addBoxReq(Q_model_none_none, -100, 900)
-  }
-
-
-  ### cline model fitting generate an hzar.fitRequest object suitable for
-  ### hzar.doFit
-  {
-    Q_model_free_bothFitR <- hzar.first.fitRequest.old.ML(
-      model = Q_model_free_both, Q, verbose = FALSE)
-    Q_model_free_leftFitR <- hzar.first.fitRequest.old.ML(
-      model = Q_model_free_left, Q, verbose = FALSE)
-    Q_model_free_rightFitR <- hzar.first.fitRequest.old.ML(
-      model = Q_model_free_right, Q, verbose = FALSE)
-    Q_model_free_mirrorFitR <- hzar.first.fitRequest.old.ML(
-      model = Q_model_free_mirror, Q, verbose = FALSE)
-    Q_model_free_noneFitR <- hzar.first.fitRequest.old.ML(
-      model = Q_model_free_none, Q, verbose = FALSE)
-
-    Q_model_fixed_bothFitR <- hzar.first.fitRequest.old.ML(
-      model = Q_model_fixed_both, Q, verbose = FALSE)
-    Q_model_fixed_leftFitR <- hzar.first.fitRequest.old.ML(
-      model = Q_model_fixed_left, Q, verbose = FALSE)
-    Q_model_fixed_rightFitR <- hzar.first.fitRequest.old.ML(
-      model = Q_model_fixed_right, Q, verbose = FALSE)
-    Q_model_fixed_mirrorFitR <- hzar.first.fitRequest.old.ML(
-      model = Q_model_fixed_mirror, Q, verbose = FALSE)
-    Q_model_fixed_noneFitR <- hzar.first.fitRequest.old.ML(
-      model = Q_model_fixed_none, Q, verbose = FALSE)
-
-    Q_model_none_bothFitR <- hzar.first.fitRequest.old.ML(
-      model = Q_model_none_both, Q, verbose = FALSE)
-    Q_model_none_leftFitR <- hzar.first.fitRequest.old.ML(
-      model = Q_model_none_left, Q, verbose = FALSE)
-    Q_model_none_rightFitR <- hzar.first.fitRequest.old.ML(
-      model = Q_model_none_right, Q, verbose = FALSE)
-    Q_model_none_mirrorFitR <- hzar.first.fitRequest.old.ML(
-      model = Q_model_none_mirror, Q, verbose = FALSE)
-    Q_model_none_noneFitR <- hzar.first.fitRequest.old.ML(
-      model = Q_model_none_none, Q, verbose = FALSE)
-  }
-
-  ## set mcmc chain length and burn in
-  {
-    Q_model_free_bothFitR$mcmcParam$chainLength <- 1e+05
-    Q_model_free_bothFitR$mcmcParam$burnin <- 5e+05
-    Q_model_free_leftFitR$mcmcParam$chainLength <- 1e+05
-    Q_model_free_leftFitR$mcmcParam$burnin <- 5e+05
-    Q_model_free_rightFitR$mcmcParam$chainLength <- 1e+05
-    Q_model_free_rightFitR$mcmcParam$burnin <- 5e+05
-    Q_model_free_mirrorFitR$mcmcParam$chainLength <- 1e+05
-    Q_model_free_mirrorFitR$mcmcParam$burnin <- 5e+05
-    Q_model_free_noneFitR$mcmcParam$chainLength <- 1e+05
-    Q_model_free_noneFitR$mcmcParam$burnin <- 5e+05
-
-    Q_model_fixed_bothFitR$mcmcParam$chainLength <- 1e+05
-    Q_model_fixed_bothFitR$mcmcParam$burnin <- 5e+05
-    Q_model_fixed_leftFitR$mcmcParam$chainLength <- 1e+05
-    Q_model_fixed_leftFitR$mcmcParam$burnin <- 5e+05
-    Q_model_fixed_rightFitR$mcmcParam$chainLength <- 1e+05
-    Q_model_fixed_rightFitR$mcmcParam$burnin <- 5e+05
-    Q_model_fixed_mirrorFitR$mcmcParam$chainLength <- 1e+05
-    Q_model_fixed_mirrorFitR$mcmcParam$burnin <- 5e+05
-    Q_model_fixed_noneFitR$mcmcParam$chainLength <- 1e+05
-    Q_model_fixed_noneFitR$mcmcParam$burnin <- 5e+05
-
-    Q_model_none_bothFitR$mcmcParam$chainLength <- 1e+05
-    Q_model_none_bothFitR$mcmcParam$burnin <- 5e+05
-    Q_model_none_leftFitR$mcmcParam$chainLength <- 1e+05
-    Q_model_none_leftFitR$mcmcParam$burnin <- 5e+05
-    Q_model_none_rightFitR$mcmcParam$chainLength <- 1e+05
-    Q_model_none_rightFitR$mcmcParam$burnin <- 5e+05
-    Q_model_none_mirrorFitR$mcmcParam$chainLength <- 1e+05
-    Q_model_none_mirrorFitR$mcmcParam$burnin <- 5e+05
-    Q_model_none_noneFitR$mcmcParam$chainLength <- 1e+05
-    Q_model_none_noneFitR$mcmcParam$burnin <- 5e+05
-  }
-
-  ## Run the optimizer using the parameters listed in the hzar.fitRequest
-  ## given.
-  cat("\nFitting model labeled 'cline_free_bothModel':")
-  Q_model_free_bothFit <- hzar.doFit(Q_model_free_bothFitR)
-  cat("\nFitting model labeled 'cline_free_leftModel:")
-  Q_model_free_leftFit <- hzar.doFit(Q_model_free_leftFitR)
-  cat("\nFitting model labeled 'cline_free_rightModel':")
-  Q_model_free_rightFit <- hzar.doFit(Q_model_free_rightFitR)
-  cat("\nFitting model labeled 'cline_free_mirrorModel':")
-  Q_model_free_mirrorFit <- hzar.doFit(Q_model_free_mirrorFitR)
-  cat("\nFitting model labeled 'cline_free_noneModel':")
-  Q_model_free_noneFit <- hzar.doFit(Q_model_free_noneFitR)
-
-  cat("\nFitting model labeled 'cline_fixed_bothModel':")
-  Q_model_fixed_bothFit <- hzar.doFit(Q_model_fixed_bothFitR)
-  cat("\nFitting model labeled 'cline_fixed_leftModel':")
-  Q_model_fixed_leftFit <- hzar.doFit(Q_model_fixed_leftFitR)
-  cat("\nFitting model labeled 'cline_fixed_rightModel':")
-  Q_model_fixed_rightFit <- hzar.doFit(Q_model_fixed_rightFitR)
-  cat("\nFitting model labeled 'cline_fixed_mirrorModel':")
-  Q_model_fixed_mirrorFit <- hzar.doFit(Q_model_fixed_mirrorFitR)
-  cat("\nFitting model labeled 'cline_fixed_noneModel':")
-  Q_model_fixed_noneFit <- hzar.doFit(Q_model_fixed_noneFitR)
-
-  cat("\nFitting model labeled 'cline_none_bothModel':")
-  Q_model_none_bothFit <- hzar.doFit(Q_model_none_bothFitR)
-  cat("\nFitting model labeled 'cline_none_leftModel':")
-  Q_model_none_leftFit <- hzar.doFit(Q_model_none_leftFitR)
-  cat("\nFitting model labeled 'cline_none_rightModel':")
-  Q_model_none_rightFit <- hzar.doFit(Q_model_none_rightFitR)
-  cat("\nFitting model labeled 'cline_none_mirrorModel':")
-  Q_model_none_mirrorFit <- hzar.doFit(Q_model_none_mirrorFitR)
-  cat("\nFitting model labeled 'cline_none_noneModel':")
-  Q_model_none_noneFit <- hzar.doFit(Q_model_none_noneFitR)
-
-  # ### plot model to look for run stability and convergence and return the
-  # mcmc data with an added a log likelihood column.
-  pdf("free_both_model_trace.pdf", height = 11, width = 8.5)
-  plot(hzar.mcmc.bindLL(Q_model_free_bothFit))
-  dev.off()
-  pdf("free_left_model_trace.pdf", height = 11, width = 8.5)
-  plot(hzar.mcmc.bindLL(Q_model_free_leftFit))
-  dev.off()
-  pdf("free_right_model_trace.pdf", height = 11, width = 8.5)
-  plot(hzar.mcmc.bindLL(Q_model_free_rightFit))
-  dev.off()
-  pdf("free_mirror_model_trace.pdf", height = 11, width = 8.5)
-  plot(hzar.mcmc.bindLL(Q_model_free_mirrorFit))
-  dev.off()
-  pdf("free_none_model_trace.pdf", height = 11, width = 8.5)
-  plot(hzar.mcmc.bindLL(Q_model_free_noneFit))
-  dev.off()
-
-  ### group multiple fits of the same model and the same observation data
-  ### into a single object
-  Q_model_free_bothData <- hzar.dataGroup.add(Q_model_free_bothFit)
-  Q_model_free_leftData <- hzar.dataGroup.add(Q_model_free_leftFit)
-  Q_model_free_rightData <- hzar.dataGroup.add(Q_model_free_rightFit)
-  Q_model_free_mirrorData <- hzar.dataGroup.add(Q_model_free_mirrorFit)
-  Q_model_free_noneData <- hzar.dataGroup.add(Q_model_free_noneFit)
-
-  Q_model_fixed_bothData <- hzar.dataGroup.add(Q_model_fixed_bothFit)
-  Q_model_fixed_leftData <- hzar.dataGroup.add(Q_model_fixed_leftFit)
-  Q_model_fixed_rightData <- hzar.dataGroup.add(Q_model_fixed_rightFit)
-  Q_model_fixed_mirrorData <- hzar.dataGroup.add(Q_model_fixed_mirrorFit)
-  Q_model_fixed_noneData <- hzar.dataGroup.add(Q_model_fixed_noneFit)
-
-  Q_model_none_bothData <- hzar.dataGroup.add(Q_model_none_bothFit)
-  Q_model_none_leftData <- hzar.dataGroup.add(Q_model_none_leftFit)
-  Q_model_none_rightData <- hzar.dataGroup.add(Q_model_none_rightFit)
-  Q_model_none_mirrorData <- hzar.dataGroup.add(Q_model_none_mirrorFit)
-  Q_model_none_noneData <- hzar.dataGroup.add(Q_model_none_noneFit)
+  Q_model_none_both <- hzar.model.addBoxReq(Q_model_none_both, -100, 900)
+  Q_model_none_left <- hzar.model.addBoxReq(Q_model_none_left, -100, 900)
+  Q_model_none_right <- hzar.model.addBoxReq(Q_model_none_right, -100, 900)
+  Q_model_none_mirror <- hzar.model.addBoxReq(Q_model_none_mirror, -100, 900)
+  Q_model_none_none <- hzar.model.addBoxReq(Q_model_none_none, -100, 900)
+}
 
 
-  ### Generate a hzar.dataGroup object representing a fit of the null model
-  ### to a hzar.obsData object
-  Q_modelNull <- hzar.dataGroup.null(Q)
+### cline model fitting generate an hzar.fitRequest object suitable for
+### hzar.doFit
+{
+  Q_model_free_bothFitR <- hzar.first.fitRequest.old.ML(
+    model = Q_model_free_both, Q, verbose = FALSE)
+  Q_model_free_leftFitR <- hzar.first.fitRequest.old.ML(
+    model = Q_model_free_left, Q, verbose = FALSE)
+  Q_model_free_rightFitR <- hzar.first.fitRequest.old.ML(
+    model = Q_model_free_right, Q, verbose = FALSE)
+  Q_model_free_mirrorFitR <- hzar.first.fitRequest.old.ML(
+    model = Q_model_free_mirror, Q, verbose = FALSE)
+  Q_model_free_noneFitR <- hzar.first.fitRequest.old.ML(
+    model = Q_model_free_none, Q, verbose = FALSE)
 
-  ## make list of cline models and null models
-  Q_dGs <- list(cline_free_bothModel = Q_model_free_bothData,
-                cline_free_leftModel = Q_model_free_leftData,
-                cline_free_rightModel = Q_model_free_rightData,
-                cline_free_mirrorModel = Q_model_free_mirrorData,
-                cline_free_noneModel = Q_model_free_noneData,
-                cline_fixed_bothModel = Q_model_fixed_bothData,
-                cline_fixed_leftModel = Q_model_fixed_leftData,
-                cline_fixed_rightModel = Q_model_fixed_rightData,
-                cline_fixed_mirrorModel = Q_model_fixed_mirrorData,
-                cline_fixed_noneModel = Q_model_fixed_noneData,
-                cline_none_bothModel = Q_model_none_bothData,
-                cline_none_leftModel = Q_model_none_leftData,
-                cline_none_rightModel = Q_model_none_rightData,
-                cline_none_mirrorModel = Q_model_none_mirrorData,
-                cline_none_noneModel = Q_model_none_noneData,
-                nullModel = Q_modelNull)
+  Q_model_fixed_bothFitR <- hzar.first.fitRequest.old.ML(
+    model = Q_model_fixed_both, Q, verbose = FALSE)
+  Q_model_fixed_leftFitR <- hzar.first.fitRequest.old.ML(
+    model = Q_model_fixed_left, Q, verbose = FALSE)
+  Q_model_fixed_rightFitR <- hzar.first.fitRequest.old.ML(
+    model = Q_model_fixed_right, Q, verbose = FALSE)
+  Q_model_fixed_mirrorFitR <- hzar.first.fitRequest.old.ML(
+    model = Q_model_fixed_mirror, Q, verbose = FALSE)
+  Q_model_fixed_noneFitR <- hzar.first.fitRequest.old.ML(
+    model = Q_model_fixed_none, Q, verbose = FALSE)
 
-  ### Collect optimizer output based on the same hzar.obsData object
-  Q_oDG <- hzar.make.obsDataGroup(Q_dGs)
+  Q_model_none_bothFitR <- hzar.first.fitRequest.old.ML(
+    model = Q_model_none_both, Q, verbose = FALSE)
+  Q_model_none_leftFitR <- hzar.first.fitRequest.old.ML(
+    model = Q_model_none_left, Q, verbose = FALSE)
+  Q_model_none_rightFitR <- hzar.first.fitRequest.old.ML(
+    model = Q_model_none_right, Q, verbose = FALSE)
+  Q_model_none_mirrorFitR <- hzar.first.fitRequest.old.ML(
+    model = Q_model_none_mirror, Q, verbose = FALSE)
+  Q_model_none_noneFitR <- hzar.first.fitRequest.old.ML(
+    model = Q_model_none_none, Q, verbose = FALSE)
+} |> quiet() |> invisible()
 
-  ### Set the names of the list of hzar.dataGroup objects contained in a
-  ### hzar.obsDataGroup object using the names from either a named list of
-  ### hzar.dataGroup objects or another hzar.obsDataGroup object.
-  Q_oDG <- hzar.copyModelLabels(Q_dGs, Q_oDG)
+## set mcmc chain length and burn in
+{
+  Q_model_free_bothFitR$mcmcParam$chainLength <- 1e+05
+  Q_model_free_bothFitR$mcmcParam$burnin <- 5e+05
+  Q_model_free_leftFitR$mcmcParam$chainLength <- 1e+05
+  Q_model_free_leftFitR$mcmcParam$burnin <- 5e+05
+  Q_model_free_rightFitR$mcmcParam$chainLength <- 1e+05
+  Q_model_free_rightFitR$mcmcParam$burnin <- 5e+05
+  Q_model_free_mirrorFitR$mcmcParam$chainLength <- 1e+05
+  Q_model_free_mirrorFitR$mcmcParam$burnin <- 5e+05
+  Q_model_free_noneFitR$mcmcParam$chainLength <- 1e+05
+  Q_model_free_noneFitR$mcmcParam$burnin <- 5e+05
 
-  return(Q_oDG)
+  Q_model_fixed_bothFitR$mcmcParam$chainLength <- 1e+05
+  Q_model_fixed_bothFitR$mcmcParam$burnin <- 5e+05
+  Q_model_fixed_leftFitR$mcmcParam$chainLength <- 1e+05
+  Q_model_fixed_leftFitR$mcmcParam$burnin <- 5e+05
+  Q_model_fixed_rightFitR$mcmcParam$chainLength <- 1e+05
+  Q_model_fixed_rightFitR$mcmcParam$burnin <- 5e+05
+  Q_model_fixed_mirrorFitR$mcmcParam$chainLength <- 1e+05
+  Q_model_fixed_mirrorFitR$mcmcParam$burnin <- 5e+05
+  Q_model_fixed_noneFitR$mcmcParam$chainLength <- 1e+05
+  Q_model_fixed_noneFitR$mcmcParam$burnin <- 5e+05
 
-})
+  Q_model_none_bothFitR$mcmcParam$chainLength <- 1e+05
+  Q_model_none_bothFitR$mcmcParam$burnin <- 5e+05
+  Q_model_none_leftFitR$mcmcParam$chainLength <- 1e+05
+  Q_model_none_leftFitR$mcmcParam$burnin <- 5e+05
+  Q_model_none_rightFitR$mcmcParam$chainLength <- 1e+05
+  Q_model_none_rightFitR$mcmcParam$burnin <- 5e+05
+  Q_model_none_mirrorFitR$mcmcParam$chainLength <- 1e+05
+  Q_model_none_mirrorFitR$mcmcParam$burnin <- 5e+05
+  Q_model_none_noneFitR$mcmcParam$chainLength <- 1e+05
+  Q_model_none_noneFitR$mcmcParam$burnin <- 5e+05
+}
 
-# run all the model optimisers and fitting and collect a list of all the
-# results for visualization downstream
-Q_oDG <- fit_cline_models(Q)
+## Run the optimizer using the parameters listed in the hzar.fitRequest
+## given.
+cat("\nFitting model labeled 'cline_free_bothModel':")
+Q_model_free_bothFit <- hzar.doFit(Q_model_free_bothFitR)
+cat("\nFitting model labeled 'cline_free_leftModel:")
+Q_model_free_leftFit <- hzar.doFit(Q_model_free_leftFitR)
+cat("\nFitting model labeled 'cline_free_rightModel':")
+Q_model_free_rightFit <- hzar.doFit(Q_model_free_rightFitR)
+cat("\nFitting model labeled 'cline_free_mirrorModel':")
+Q_model_free_mirrorFit <- hzar.doFit(Q_model_free_mirrorFitR)
+cat("\nFitting model labeled 'cline_free_noneModel':")
+Q_model_free_noneFit <- hzar.doFit(Q_model_free_noneFitR)
+
+cat("\nFitting model labeled 'cline_fixed_bothModel':")
+Q_model_fixed_bothFit <- hzar.doFit(Q_model_fixed_bothFitR)
+cat("\nFitting model labeled 'cline_fixed_leftModel':")
+Q_model_fixed_leftFit <- hzar.doFit(Q_model_fixed_leftFitR)
+cat("\nFitting model labeled 'cline_fixed_rightModel':")
+Q_model_fixed_rightFit <- hzar.doFit(Q_model_fixed_rightFitR)
+cat("\nFitting model labeled 'cline_fixed_mirrorModel':")
+Q_model_fixed_mirrorFit <- hzar.doFit(Q_model_fixed_mirrorFitR)
+cat("\nFitting model labeled 'cline_fixed_noneModel':")
+Q_model_fixed_noneFit <- hzar.doFit(Q_model_fixed_noneFitR)
+
+cat("\nFitting model labeled 'cline_none_bothModel':")
+Q_model_none_bothFit <- hzar.doFit(Q_model_none_bothFitR)
+cat("\nFitting model labeled 'cline_none_leftModel':")
+Q_model_none_leftFit <- hzar.doFit(Q_model_none_leftFitR)
+cat("\nFitting model labeled 'cline_none_rightModel':")
+Q_model_none_rightFit <- hzar.doFit(Q_model_none_rightFitR)
+cat("\nFitting model labeled 'cline_none_mirrorModel':")
+Q_model_none_mirrorFit <- hzar.doFit(Q_model_none_mirrorFitR)
+cat("\nFitting model labeled 'cline_none_noneModel':")
+Q_model_none_noneFit <- hzar.doFit(Q_model_none_noneFitR)
+
+# ### plot model to look for run stability and convergence and return the
+# mcmc data with an added a log likelihood column.
+pdf("free_both_model_trace.pdf", height = 11, width = 8.5)
+plot(hzar.mcmc.bindLL(Q_model_free_bothFit))
+dev.off() |> invisible()
+pdf("free_left_model_trace.pdf", height = 11, width = 8.5)
+plot(hzar.mcmc.bindLL(Q_model_free_leftFit))
+dev.off() |> invisible()
+pdf("free_right_model_trace.pdf", height = 11, width = 8.5)
+plot(hzar.mcmc.bindLL(Q_model_free_rightFit))
+dev.off() |> invisible()
+pdf("free_mirror_model_trace.pdf", height = 11, width = 8.5)
+plot(hzar.mcmc.bindLL(Q_model_free_mirrorFit))
+dev.off() |> invisible()
+pdf("free_none_model_trace.pdf", height = 11, width = 8.5)
+plot(hzar.mcmc.bindLL(Q_model_free_noneFit))
+dev.off() |> invisible()
+
+### group multiple fits of the same model and the same observation data
+### into a single object
+Q_model_free_bothData <- hzar.dataGroup.add(Q_model_free_bothFit)
+Q_model_free_leftData <- hzar.dataGroup.add(Q_model_free_leftFit)
+Q_model_free_rightData <- hzar.dataGroup.add(Q_model_free_rightFit)
+Q_model_free_mirrorData <- hzar.dataGroup.add(Q_model_free_mirrorFit)
+Q_model_free_noneData <- hzar.dataGroup.add(Q_model_free_noneFit)
+
+Q_model_fixed_bothData <- hzar.dataGroup.add(Q_model_fixed_bothFit)
+Q_model_fixed_leftData <- hzar.dataGroup.add(Q_model_fixed_leftFit)
+Q_model_fixed_rightData <- hzar.dataGroup.add(Q_model_fixed_rightFit)
+Q_model_fixed_mirrorData <- hzar.dataGroup.add(Q_model_fixed_mirrorFit)
+Q_model_fixed_noneData <- hzar.dataGroup.add(Q_model_fixed_noneFit)
+
+Q_model_none_bothData <- hzar.dataGroup.add(Q_model_none_bothFit)
+Q_model_none_leftData <- hzar.dataGroup.add(Q_model_none_leftFit)
+Q_model_none_rightData <- hzar.dataGroup.add(Q_model_none_rightFit)
+Q_model_none_mirrorData <- hzar.dataGroup.add(Q_model_none_mirrorFit)
+Q_model_none_noneData <- hzar.dataGroup.add(Q_model_none_noneFit)
+
+
+### Generate a hzar.dataGroup object representing a fit of the null model
+### to a hzar.obsData object
+Q_modelNull <- hzar.dataGroup.null(Q)
+
+## make list of cline models and null models
+Q_dGs <- list(cline_free_bothModel = Q_model_free_bothData,
+              cline_free_leftModel = Q_model_free_leftData,
+              cline_free_rightModel = Q_model_free_rightData,
+              cline_free_mirrorModel = Q_model_free_mirrorData,
+              cline_free_noneModel = Q_model_free_noneData,
+              cline_fixed_bothModel = Q_model_fixed_bothData,
+              cline_fixed_leftModel = Q_model_fixed_leftData,
+              cline_fixed_rightModel = Q_model_fixed_rightData,
+              cline_fixed_mirrorModel = Q_model_fixed_mirrorData,
+              cline_fixed_noneModel = Q_model_fixed_noneData,
+              cline_none_bothModel = Q_model_none_bothData,
+              cline_none_leftModel = Q_model_none_leftData,
+              cline_none_rightModel = Q_model_none_rightData,
+              cline_none_mirrorModel = Q_model_none_mirrorData,
+              cline_none_noneModel = Q_model_none_noneData,
+              nullModel = Q_modelNull)
+
+### Collect optimizer output based on the same hzar.obsData object
+Q_oDG <- hzar.make.obsDataGroup(Q_dGs) |> quiet()
+
+### Set the names of the list of hzar.dataGroup objects contained in a
+### hzar.obsDataGroup object using the names from either a named list of
+### hzar.dataGroup objects or another hzar.obsDataGroup object.
+Q_oDG <- hzar.copyModelLabels(Q_dGs, Q_oDG)
+
 
 ### Plots a line representing the expected frequency versus distance for the
 ### given object. For hzar.dataGroup and hzar.obsDataGroup objects, plots the
@@ -423,8 +417,8 @@ Q_oDG <- fit_cline_models(Q)
 ### maximum likelihood cline for each model.
 pdf(paste(downsample_regime, "model_cline_comparison.pdf", sep = "_"),
     height = 8, width = 8)
-hzar.plot.cline(Q_oDG, pch = 16)
-dev.off()
+all_clines_plot <- hzar.plot.cline(Q_oDG, pch = 16) ; remove(all_clines_plot)
+dev.off() |> invisible()
 
 ### Calculate the AIC or corrected AIC score table for the given
 ### hzar.obsDataGroup object. There will be one score generated for each model
@@ -443,10 +437,23 @@ hzar.plot.fzCline(Q_model_fixed_noneData, fzCol = rgb(68/255, 1/255,
                                                       84/255, 0.3),
                   pch = 20, col = rgb(68/255, 1/255, 84/255, 0.7),
                   xlab = "Distance (km)", ylab = "Q value")
-dev.off()
-print(Q_model_fixed_noneData$ML.cline$param.free$center)
-print(Q_model_fixed_noneData$ML.cline$param.free$width)
-print(hzar.getLLCutParam(Q_model_fixed_noneData, c("center", "width")))
+dev.off() |> invisible()
+print(
+  paste("Estimated cline center for the",
+        downsample_regime,
+        "downsampling regime:",
+        Q_model_fixed_noneData$ML.cline$param.free$center,
+        sep = " ")
+)
+print(
+  paste("Estimated cline width for the",
+        downsample_regime,
+        "downsampling regime:",
+        Q_model_fixed_noneData$ML.cline$param.free$width,
+        sep = " ")
+)
+# print("Two log likelihood unit range for center and width estimates:")
+# print(hzar.getLLCutParam(Q_model_fixed_noneData, c("center", "width")))
 
 
 ############## Plot all the clines together ############## remake all the
@@ -457,8 +464,9 @@ centered$distance <- cline$dist -
 
 Q_centered <- hzar.doMolecularData1DPops(centered$distance, centered$q,
                                          centered$SampleID)
-# hzar.plot.obsData(Q_centered)
-
+if (interactive == TRUE) {
+  hzar.plot.obsData(Q_centered)
+}
 
 ### make ClineMetaModel object
 Q_centered_model_fixed_none <- hzar.makeCline1DFreq(Q_centered,
@@ -470,14 +478,14 @@ Q_centered_model_fixed_none <- hzar.model.addBoxReq(Q_centered_model_fixed_none,
 
 ### generate hzar fitRequests
 Q_centered_model_fixed_noneFitR <- hzar.first.fitRequest.old.ML(
-  model = Q_centered_model_fixed_none, Q_centered, verbose = FALSE)
+  model = Q_centered_model_fixed_none, Q_centered, verbose = FALSE) |> quiet()
 
 ### set mcmc chainLength and burnin
 Q_centered_model_fixed_noneFitR$mcmcParam$chainLength <- 1e+05
 Q_centered_model_fixed_noneFitR$mcmcParam$burnin <- 5e+05
 
 ### Run the optimizer using the parameters listed in the hzar.fitRequest given.
-Q_centered_model_fixed_noneFit <- hzar.doFit(Q_centered_model_fixed_noneFitR)
+Q_centered_model_fixed_noneFit <- hzar.doFit(Q_centered_model_fixed_noneFitR) |> quiet()
 
 ### group multiple fits of the same model and the same observation data into a
 ### single object
@@ -522,4 +530,4 @@ polygon(x = c(fzCoor$x, rev(fzCoor$x)), y = c(fzCoor$yMin, rev(fzCoor$yMax)),
         col = rgb(68/255, 1/255, 84/255, 0.3))
 lines(x = xSeries, y = Q_centered_model_fixed_noneData$ML.cline$clineFunc(xSeries),
       col = rgb(68/255, 1/255, 84/255), lwd = 2)
-dev.off()
+dev.off() |> invisible()
