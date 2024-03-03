@@ -405,7 +405,7 @@ process CONVERT_TO_MPGL {
 
 	publishDir params.entropy, mode: 'copy'
 
-    cpus 1
+    cpus 12
 	time '1h'
 
 	input:
@@ -430,7 +430,7 @@ process RUN_ENTROPY {
 	tag "${subsample}"
 	publishDir params.entropy, mode: 'copy'
 
-    cpus 1
+    cpus 8
 	time '7d'
 
 	input:

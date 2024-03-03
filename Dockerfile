@@ -44,7 +44,7 @@ RUN apt-get update && \
     libarchive-dev \
     libzip-dev \
     xvfb \
-    muscle \
+    perl \
     python3-pip \
     git \
     libssl-dev \
@@ -87,6 +87,7 @@ RUN mamba install -y -n base -c conda-forge -c r -c bioconda r-base \
     bioconductor-rhdf5
 
 RUN Rscript -e "devtools::install_github('GrahamDB/hzar', repos = 'https://cloud.r-project.org/', lib='/opt/conda/lib/R/library', clean = TRUE)"
+RUN Rscript -e "install.packages('SimDesign', lib='/opt/conda/lib/R/library', clean = TRUE)"
 
 # install biology-specific CLI packages
 RUN mamba install -y -n base -c defaults -c bioconda -c conda-forge \
@@ -98,16 +99,32 @@ RUN mamba install -y -n base -c defaults -c bioconda -c conda-forge \
     bwa \
     popgen-entropy
 
+# pull in entropy source code to get access to the package's perl, python,
+# and r scripts, and add them to $PATH
+RUN mkdir /opt/entropy && \
+    wget -q https://bitbucket.org/buerklelab/mixedploidy-entropy/get/246ccf1003c4.zip && \
+    mv 246ccf1003c4.zip /opt/entropy/ && \
+    cd /opt/entropy && \
+    unzip 246ccf1003c4.zip && \
+    cd buerklelab-mixedploidy-entropy-246ccf1003c4 && \
+    chmod +x */pl && \
+    chmod +x auxfiles/*.pl && \
+    chmod +x auxfiles/*.R && \
+    chmod +x auxfiles/*.sh && \
+    chmod +x simfiles/diploid/*.R && \
+    chmod +x simfiles/diploid/*.py
+ENV PATH $PATH:/opt/entropy:/opt/entropy/auxfiles:/opt/entropy/simfiles/diploid
+
 # Install Julia
 RUN curl -fsSL https://install.julialang.org | sh
 
 # Copy Julia dependencies to precompile as a module
 ENV JULIA_DEPOT_PATH=/root/.julia
 ENV JULIA_SCRATCH_TRACK_ACCESS=0
-COPY Project.toml /root/.julia/environments/v1.9/Project.toml
-COPY Manifest.toml /root/.julia/environments/v1.9/Manifest.toml
+COPY Project.toml /root/.julia/environments/v1.10/Project.toml
+COPY Manifest.toml /root/.julia/environments/v1.10/Manifest.toml
 RUN julia -e 'using Pkg; \
-            Pkg.activate(joinpath(DEPOT_PATH[1], "environments", "v1.9")); \
+            Pkg.activate(joinpath(DEPOT_PATH[1], "environments", "v1.10")); \
             Pkg.instantiate();'
 
 # make sure shells are bash
