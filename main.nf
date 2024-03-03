@@ -470,7 +470,7 @@ process FIT_CLINE_MODELS {
     path metadata_files
 
 	output:
-	path "*.pdf"
+	path "*"
 
 	script:
 	"""
