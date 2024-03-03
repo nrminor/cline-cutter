@@ -113,7 +113,7 @@ RUN mkdir /opt/entropy && \
     chmod +x auxfiles/*.sh && \
     chmod +x simfiles/diploid/*.R && \
     chmod +x simfiles/diploid/*.py
-ENV PATH $PATH:/opt/entropy:/opt/entropy/auxfiles:/opt/entropy/simfiles/diploid
+ENV PATH $PATH:/opt/entropy/buerklelab-mixedploidy-entropy-246ccf1003c4:/opt/entropy/auxfiles/buerklelab-mixedploidy-entropy-246ccf1003c4:/opt/entropy/buerklelab-mixedploidy-entropy-246ccf1003c4/simfiles/diploid
 
 # Install Julia
 RUN curl -fsSL https://install.julialang.org | sh
