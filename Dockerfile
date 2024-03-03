@@ -114,7 +114,7 @@ RUN mkdir /opt/entropy && \
 ENV PATH $PATH:/opt/entropy/buerklelab-mixedploidy-entropy-246ccf1003c4:/opt/entropy/auxfiles/buerklelab-mixedploidy-entropy-246ccf1003c4:/opt/entropy/buerklelab-mixedploidy-entropy-246ccf1003c4/simfiles/diploid
 
 # Install Julia
-RUN curl -fsSL https://install.julialang.org | sh
+RUN curl -fsSL https://install.julialang.org | sh -s -- -y
 
 # Copy Julia dependencies to precompile as a module
 ENV JULIA_DEPOT_PATH=/root/.julia
