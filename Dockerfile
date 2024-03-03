@@ -87,7 +87,7 @@ RUN mamba install -y -n base -c conda-forge -c r -c bioconda r-base \
     bioconductor-rhdf5
 
 RUN Rscript -e "devtools::install_github('GrahamDB/hzar', repos = 'https://cloud.r-project.org/', lib='/opt/conda/lib/R/library', clean = TRUE)"
-RUN Rscript -e "install.packages('SimDesign', lib='/opt/conda/lib/R/library', clean = TRUE)"
+RUN Rscript -e "install.packages('SimDesign', repos = 'https://cloud.r-project.org/', lib='/opt/conda/lib/R/library', clean = TRUE)"
 
 # install biology-specific CLI packages
 RUN mamba install -y -n base -c defaults -c bioconda -c conda-forge \
