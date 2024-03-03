@@ -122,7 +122,7 @@ RUN curl -fsSL https://install.julialang.org | sh
 ENV JULIA_DEPOT_PATH=/root/.julia
 ENV JULIA_SCRATCH_TRACK_ACCESS=0
 COPY Project.toml /root/.julia/environments/v1.10/Project.toml
-COPY Manifest.toml /root/.julia/environments/v1.10/Manifest.toml
+# COPY Manifest.toml /root/.julia/environments/v1.10/Manifest.toml
 RUN julia -e 'using Pkg; \
             Pkg.activate(joinpath(DEPOT_PATH[1], "environments", "v1.10")); \
             Pkg.instantiate();'
