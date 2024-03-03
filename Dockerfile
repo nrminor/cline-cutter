@@ -107,7 +107,7 @@ RUN mkdir /opt/entropy && \
     cd /opt/entropy && \
     unzip 246ccf1003c4.zip && \
     cd buerklelab-mixedploidy-entropy-246ccf1003c4 && \
-    chmod +x */pl && \
+    chmod +x *.pl && \
     chmod +x auxfiles/*.pl && \
     chmod +x auxfiles/*.R && \
     chmod +x auxfiles/*.sh && \
