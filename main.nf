@@ -7,8 +7,8 @@ nextflow.enable.dsl = 2
 // WORKFLOW SPECIFICATION
 // --------------------------------------------------------------- //
 workflow {
-	
-	
+
+
 	// input channels
     ch_reads = Channel
         .fromPath( "${params.input_dir}/*.fastq.gz" )
@@ -16,12 +16,12 @@ workflow {
 
     ch_seeds = Channel
         .of( 1, 2, 3 )
-    
+
     ch_sample_meta = Channel
         .fromPath( params.samplesheet )
-	
-	
-	// Workflow steps 
+
+
+	// Workflow steps
 	if ( params.precalled_vcf == "" ){
 
 		DEMULTIPLEX_READS (
@@ -95,10 +95,10 @@ workflow {
 			.map { sample, hdf5s -> tuple( sample, hdf5s[0], hdf5s[1], hdf5s[2] ) },
         ch_sample_meta
 			.mix(RECORD_FINAL_ROSTER.out.collect())
-			.collect()	
+			.collect()
     )
-	
-	
+
+
 }
 // --------------------------------------------------------------- //
 
@@ -133,119 +133,119 @@ params.clines = params.analyses + "/2_clines"
 
 
 
-// PROCESS SPECIFICATION 
+// PROCESS SPECIFICATION
 // --------------------------------------------------------------- //
 
 process DEMULTIPLEX_READS {
-	
+
 	/*
     This process does something described here
     */
 
 	publishDir params.demux, mode: 'copy'
-	
+
 	input:
-	
+
 	output:
     path "*.fastq.gz"
-	
+
 	script:
 	"""
 	"""
 }
 
 process INDEX_FOR_MAPPING {
-	
+
 	/*
     This process does something described here
     */
-	
+
 	tag "${sample}"
-	
+
 	input:
-	
+
 	output:
-	
+
 	script:
 	"""
 	"""
 }
 
 process MAP_WITH_BWA {
-	
+
 	/*
     This process does something described here
     */
-	
+
 	tag "${sample}"
 
     cpus 8
-	
+
 	input:
-	
+
 	output:
-	
+
 	script:
 	"""
 	"""
 }
 
 process CONVERT_AND_INDEX {
-	
+
 	/*
     This process does something described here
     */
-	
+
 	tag "${sample}"
 	publishDir params.alignments, mode: 'copy'
 
     cpus 4
-	
+
 	input:
-	
+
 	output:
-	
+
 	script:
 	"""
 	"""
 }
 
 process VARIANT_CALL {
-	
+
 	/*
     This process does something described here
     */
-	
+
 	tag "${tag}"
 	publishDir params.variants, mode: 'copy'
 
     cpus 8
-	
+
 	input:
-	
+
 	output:
-	
+
 	script:
 	"""
 	"""
 }
 
 process VCF_FILTERING {
-	
+
 	/*
     This process does something described here
     */
-	
+
 	publishDir params.filtered, mode: 'copy'
 
 	time '6h'
-	
+
 	input:
 	path vcf
-	
+
 	output:
 	path "*.vcf"
-	
+
 	script:
 	subsample = file(vcf.toString()).getSimpleName().replace("_sample", "")
 	"""
@@ -257,21 +257,21 @@ process VCF_FILTERING {
 }
 
 process SNP_THINNING {
-	
+
 	/*
     This process does something described here
     */
-	
+
 	publishDir params.thinned, mode: 'copy'
 
 	time '1h'
-	
+
 	input:
 	path vcf
-	
+
 	output:
 	tuple path("*.vcf"), val(simple_name)
-	
+
 	script:
 	simple_name = file(vcf.toString()).getSimpleName()
 	"""
@@ -282,21 +282,21 @@ process SNP_THINNING {
 }
 
 process FILTER_INDIVS {
-	
+
 	/*
     This process does something described here
     */
-	
+
 	publishDir params.no_missing, mode: 'copy'
 
 	time '1h'
-	
+
 	input:
 	tuple path(vcf), val(simple_name)
-	
+
 	output:
 	path "*.vcf"
-	
+
 	shell:
 	'''
 	# find individuals where all sites are marked as missing
@@ -304,7 +304,7 @@ process FILTER_INDIVS {
 
 	# parse those into a simple text file
     awk '$5 >= 0.7 {print $1}' out.imiss > individuals_to_remove.txt
-    
+
 	# use vcftools again to remove individuals in the all-missing txt file
 	vcftools \
 	--vcf !{vcf} \
@@ -316,23 +316,23 @@ process FILTER_INDIVS {
 }
 
 process RUN_DOWNSAMPLING {
-	
+
 	/*
     This process does something described here
     */
-	
+
 	publishDir params.downsampled, mode: 'copy'
 
 	cpus 4
 	time '6h'
-	
+
 	input:
 	path vcf
 	path samplesheet
-	
+
 	output:
 	path "*.vcf", emit: vcf
-	
+
 	script:
 	"""
 	sample-by-coordinate.py \
@@ -350,7 +350,7 @@ process RECORD_FINAL_ROSTER {
 
 	/*
 	*/
-	
+
 	publishDir params.downsampled, mode: 'copy'
 
 	cpus 1
@@ -371,20 +371,20 @@ process RECORD_FINAL_ROSTER {
 }
 
 process CREATE_Q_PRIORS {
-	
+
 	/*
     This process does something described here
     */
 
     cpus 1
 	time '10m'
-	
+
 	input:
 	path vcf
-	
+
 	output:
 	tuple path(vcf), path("*.txt")
-	
+
 	shell:
 	'''
 	N=$(bcftools query -l !{vcf} | wc -l)
@@ -398,22 +398,22 @@ process CREATE_Q_PRIORS {
 }
 
 process CONVERT_TO_MPGL {
-	
+
 	/*
     This process does something described here
     */
-	
+
 	publishDir params.entropy, mode: 'copy'
 
     cpus 1
 	time '1h'
-	
+
 	input:
 	tuple path(vcf), path(starting_q)
-	
+
 	output:
 	tuple path("*.mpgl"), path(starting_q)
-	
+
 	script:
 	"""
 	vcf2mpgl.R ${vcf}
@@ -422,24 +422,24 @@ process CONVERT_TO_MPGL {
 }
 
 process RUN_ENTROPY {
-	
+
 	/*
     This process does something described here
     */
-	
+
 	tag "${subsample}"
 	publishDir params.entropy, mode: 'copy'
 
     cpus 1
 	time '7d'
-	
+
 	input:
     each random_seed
 	tuple path(mpgl), path(starting_q)
-	
+
 	output:
 	tuple val(subsample), path("*.hdf5")
-	
+
 	script:
 	subsample = file(mpgl.toString()).getSimpleName()
 	"""
@@ -454,31 +454,32 @@ process RUN_ENTROPY {
 // process VISUALIZE_ENTROPY_TRACE {}
 
 process FIT_CLINE_MODELS {
-	
+
 	/*
     This process does something described here
     */
-	
+
 	tag "${subsample}"
 	publishDir params.clines, mode: 'copy'
 
     cpus 1
 	time '8h'
-	
+
 	input:
 	tuple val(subsample), path(hdf5_1), path(hdf5_2), path(hdf5_3)
     path metadata_files
-	
+
 	output:
 	path "*.pdf"
-	
+
 	script:
 	"""
-	cline_fitting.R
+	cline_fitting.R && \
+	log_parsing.jl ${subsample} .command.log
 	"""
 
 }
 
-process REPORT_MODEL_PERFORMANCE {}
+// process REPORT_MODEL_PERFORMANCE {}
 
 // --------------------------------------------------------------- //
