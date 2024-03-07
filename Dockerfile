@@ -145,7 +145,7 @@ RUN chmod +x /usr/local/bin/* && \
     chmod -R +rw /opt/.julia/logs/ && \
     chmod -R +rwx /opt/.julia/logs/* && \
     chmod -R +rwx /opt/.julia/compiled/ && \
-    chmod -R +rwx /opt/.julia/compiled/v1.9/* && \
+    chmod -R +rwx /opt/.julia/compiled/v1.10/* && \
     chmod -R +rwx /opt/.julia/logs/* && \
     chmod -R +rwx /opt/.julia/packages/
 
