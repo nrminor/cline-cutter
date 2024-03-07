@@ -117,14 +117,16 @@ RUN mkdir /opt/entropy && \
 ENV PATH $PATH:/opt/entropy/buerklelab-mixedploidy-entropy-246ccf1003c4:/opt/entropy/auxfiles/buerklelab-mixedploidy-entropy-246ccf1003c4:/opt/entropy/buerklelab-mixedploidy-entropy-246ccf1003c4/simfiles/diploid
 
 # Install Julia
-RUN curl -fsSL https://install.julialang.org | sh -s -- -y
-ENV PATH $PATH:/opt/.juliaup/bin
+RUN wget https://julialang-s3.julialang.org/bin/linux/x64/1.10/julia-1.10.0-linux-x86_64.tar.gz && \
+    tar -xzf julia-1.10.0-linux-x86_64.tar.gz -C /opt && \
+    ln -s /opt/julia-1.10.0/bin/julia /usr/local/bin/julia && \
+    rm julia-1.10.0-linux-x86_64.tar.gz
 
 # Copy Julia dependencies to precompile as a module
-ENV JULIA_DEPOT_PATH=/opt/.julia
+ENV JULIA_DEPOT_PATH=/root/.julia
 ENV JULIA_SCRATCH_TRACK_ACCESS=0
-COPY Project.toml /opt/.julia/environments/v1.10/Project.toml
-COPY Manifest.toml /opt/.julia/environments/v1.10/Manifest.toml
+COPY Project.toml /root/.julia/environments/v1.10/Project.toml
+COPY Manifest.toml /root/.julia/environments/v1.10/Manifest.toml
 RUN julia -e 'using Pkg; \
             Pkg.activate(joinpath(DEPOT_PATH[1], "environments", "v1.10")); \
             Pkg.instantiate()'
