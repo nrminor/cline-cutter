@@ -132,6 +132,22 @@ RUN julia -e 'using Pkg; \
             Pkg.activate(joinpath(DEPOT_PATH[1], "environments", "v1.10")); \
             Pkg.instantiate()'
 RUN julia -e 'using CSV, DataFrames, Pipe, VariantCallFormat, VCFTools'
+ENV PATH=$PATH:/opt/julia-1.10.0/bin:/scratch/.julia/compiled/v1.10
+
+# make sure bin files are executable
+RUN chmod +x /usr/local/bin/* && \
+    chmod +x /opt/julia-1.10.0/bin/* && \
+    rm -f /opt/conda/bin/cpp && \
+    chmod +x /opt/conda/bin/* && \
+    chmod +rw /opt/ && \
+    chmod -R +rwx /opt/ && \
+    chmod -R +rwx /opt/.julia/ && \
+    chmod -R +rw /opt/.julia/logs/ && \
+    chmod -R +rwx /opt/.julia/logs/* && \
+    chmod -R +rwx /opt/.julia/compiled/ && \
+    chmod -R +rwx /opt/.julia/compiled/v1.9/* && \
+    chmod -R +rwx /opt/.julia/logs/* && \
+    chmod -R +rwx /opt/.julia/packages/
 
 # make sure shells are bash
 CMD ["/bin/bash"]
