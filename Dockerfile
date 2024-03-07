@@ -124,7 +124,7 @@ ENV PATH $PATH:/opt/.juliaup/bin
 ENV JULIA_DEPOT_PATH=/opt/.julia
 ENV JULIA_SCRATCH_TRACK_ACCESS=0
 COPY Project.toml /opt/.julia/environments/v1.10/Project.toml
-# COPY Manifest.toml /opt/.julia/environments/v1.10/Manifest.toml
+COPY Manifest.toml /opt/.julia/environments/v1.10/Manifest.toml
 RUN julia -e 'using Pkg; \
             Pkg.activate(joinpath(DEPOT_PATH[1], "environments", "v1.10")); \
             Pkg.instantiate();'
