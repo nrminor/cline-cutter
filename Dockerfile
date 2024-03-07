@@ -125,6 +125,7 @@ RUN wget https://julialang-s3.julialang.org/bin/linux/x64/1.10/julia-1.10.0-linu
 # Copy Julia dependencies to precompile as a module
 ENV JULIA_DEPOT_PATH=/root/.julia
 ENV JULIA_SCRATCH_TRACK_ACCESS=0
+ENV JULIA_HISTORY /scratch/.julia_history
 COPY Project.toml /root/.julia/environments/v1.10/Project.toml
 COPY Manifest.toml /root/.julia/environments/v1.10/Manifest.toml
 RUN julia -e 'using Pkg; \
