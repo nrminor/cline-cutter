@@ -127,7 +127,8 @@ COPY Project.toml /opt/.julia/environments/v1.10/Project.toml
 COPY Manifest.toml /opt/.julia/environments/v1.10/Manifest.toml
 RUN julia -e 'using Pkg; \
             Pkg.activate(joinpath(DEPOT_PATH[1], "environments", "v1.10")); \
-            Pkg.instantiate();'
+            Pkg.instantiate()'
+RUN julia -e 'using CSV, DataFrames, Pipe, VariantCallFormat, VCFTools'
 
 # make sure shells are bash
 CMD ["/bin/bash"]
