@@ -3,6 +3,9 @@ FROM ubuntu:20.04
 # Set working directory
 WORKDIR /scratch
 
+# Set home directory
+ENV HOME /opt
+
 # Set environment variables
 ENV DEBIAN_FRONTEND noninteractive
 ENV TZ America/New_York
@@ -118,10 +121,10 @@ RUN curl -fsSL https://install.julialang.org | sh -s -- -y
 ENV PATH $PATH:/root/.juliaup/bin
 
 # Copy Julia dependencies to precompile as a module
-ENV JULIA_DEPOT_PATH=/root/.julia
+ENV JULIA_DEPOT_PATH=/opt/.julia
 ENV JULIA_SCRATCH_TRACK_ACCESS=0
-COPY Project.toml /root/.julia/environments/v1.10/Project.toml
-# COPY Manifest.toml /root/.julia/environments/v1.10/Manifest.toml
+COPY Project.toml /opt/.julia/environments/v1.10/Project.toml
+# COPY Manifest.toml /opt/.julia/environments/v1.10/Manifest.toml
 RUN julia -e 'using Pkg; \
             Pkg.activate(joinpath(DEPOT_PATH[1], "environments", "v1.10")); \
             Pkg.instantiate();'
