@@ -55,6 +55,9 @@ RUN apt-get update && \
     openjdk-16-jre-headless \
     libnss-sss \
     procps \
+    bcftools \
+    vcftools \
+    samtools \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -96,9 +99,6 @@ RUN Rscript -e "install.packages('SimDesign', repos = 'https://cloud.r-project.o
 RUN mamba install -y -n base -c defaults -c bioconda -c conda-forge \
     xlsx2csv \
     csvkit \
-    samtools \
-    bcftools \
-    vcftools \
     bwa \
     popgen-entropy
 
