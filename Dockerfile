@@ -46,6 +46,7 @@ RUN apt-get update && \
     libglfw3-dev \
     libarchive-dev \
     libzip-dev \
+    libgsl-dev \
     xvfb \
     perl \
     python3-pip \

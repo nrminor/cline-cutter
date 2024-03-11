@@ -48,16 +48,16 @@ function to_mpgl_df(vcf_file::String, vcf_meta::DatasetInfo)::DataFrame
     # iterate through each record and extract the information needed for
     # mpgl format
     vcf_reader = VCF.Reader(open(vcf_file, "r"))
-    @inbounds for (i, record) in enumerate(vcf_reader)
+    for (i, record) in enumerate(vcf_reader)
         # fill in the current marker's identifier
-        mpgl_df.chrom[i] = VCF.chrom(record)
+        @inbounds mpgl_df.chrom[i] = VCF.chrom(record)
 
         # parse out genotypes, double checking that enough PL's are present
         genotypes = VCF.genotype(record, :, "PL")
 
         # fill in the correct genotype
         for (j, genotype) in enumerate(genotypes)
-            mpgl_df[i,j] = replace(genotype, "," => " ")
+            @inbounds mpgl_df[i,j] = replace(genotype, "," => " ")
         end
     end
 
