@@ -101,7 +101,8 @@ RUN mamba install -y -n base -c defaults -c bioconda -c conda-forge \
     xlsx2csv \
     csvkit \
     bwa \
-    popgen-entropy
+    popgen-entropy \
+    gsl
 
 # pull in entropy source code to get access to the package's perl, python,
 # and r scripts, and add them to $PATH
