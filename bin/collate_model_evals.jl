@@ -138,4 +138,5 @@ function main()
 
 end;
 precompile(main, ())
-main()
+
+length(ARGS) > 0 && main()
