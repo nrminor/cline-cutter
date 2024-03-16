@@ -76,17 +76,17 @@ workflow {
 		RUN_DOWNSAMPLING.out.vcf.flatten()
 	)
 
-	CREATE_Q_PRIORS (
-		RUN_DOWNSAMPLING.out.vcf.flatten()
-	)
-
     CONVERT_TO_MPGL (
-        CREATE_Q_PRIORS.out
+        RUN_DOWNSAMPLING.out.vcf
     )
+
+	CREATE_Q_PRIORS (
+		CONVERT_TO_MPGL.out.flatten()
+	)
 
     RUN_ENTROPY (
         ch_seeds,
-        CONVERT_TO_MPGL.out
+        CREATE_Q_PRIORS.out
     )
 
     FIT_CLINE_MODELS (
@@ -370,33 +370,6 @@ process RECORD_FINAL_ROSTER {
 
 }
 
-process CREATE_Q_PRIORS {
-
-	/*
-    This process does something described here
-    */
-
-    cpus 1
-	time '10m'
-
-	input:
-	path vcf
-
-	output:
-	tuple path(vcf), path("*.txt")
-
-	shell:
-	'''
-	N=$(bcftools query -l !{vcf} | wc -l)
-	touch starting_q.txt
-	for (( i=1; i<=$N; i++ ))
-	do
-		echo "0.5" >> "starting_q.txt"
-	done
-	'''
-
-}
-
 process CONVERT_TO_MPGL {
 
 	/*
@@ -409,14 +382,36 @@ process CONVERT_TO_MPGL {
 	time '1h'
 
 	input:
-	tuple path(vcf), path(starting_q)
+	path vcf_files
 
 	output:
-	tuple path("*.mpgl"), path(starting_q)
+	path "*.mpgl"
 
 	script:
 	"""
 	vcf2mpgl.jl ./
+	"""
+
+}
+
+process CREATE_Q_PRIORS {
+
+	/*
+    This process does something described here
+    */
+
+    cpus 3
+
+	input:
+	path mpgl
+
+	output:
+	tuple path(mpgl), path("*.txt")
+
+	script:
+	sample_regime = mpgl.getSimpleName()
+	"""
+	mpgl_sample_size.jl ${mpgl} ${params.starting_q} ${sample_regime}
 	"""
 
 }
