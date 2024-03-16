@@ -133,9 +133,10 @@ COPY Manifest.toml /opt/.julia/environments/v1.10/Manifest.toml
 RUN julia -e 'using Pkg; \
             Pkg.activate(joinpath(DEPOT_PATH[1], "environments", "v1.10")); \
             Pkg.instantiate(); \
+            Pkg.add("PrecompileTools"); \
             Pkg.precompile()'
 COPY config/startup.jl /opt/.julia/config/startup.jl
-RUN julia -e 'using CSV, DataFrames, Pipe, VariantCallFormat, VCFTools'
+RUN julia -e 'using CSV, DataFrames, Pipe, PrecompileTools, VariantCallFormat, VCFTools'
 ENV PATH=$PATH:/opt/julia-1.10.0/bin:/scratch/.julia/compiled/v1.10
 
 # fix libgsl for entropy
