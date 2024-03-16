@@ -144,7 +144,14 @@ ENV LD_LIBRARY_PATH $LD_LIBRARY_PATH:/usr/lib/x86_64-linux-gnu
 # make sure bin files are executable
 RUN chmod +x /usr/local/bin/* && \
     chmod +x /opt/julia-1.10.0/bin/* && \
-    chmod +x /opt/conda/bin/*
+    chmod +x /opt/conda/bin/* && \
+    chmod -R +rwx /opt/.julia/ && \
+    chmod -R +rw /opt/.julia/logs/ && \
+    chmod -R +rwx /opt/.julia/logs/* && \
+    chmod -R +rwx /opt/.julia/compiled/ && \
+    chmod -R +rwx /opt/.julia/compiled/v1.10/* && \
+    chmod -R +rwx /opt/.julia/logs/* && \
+    chmod -R +rwx /opt/.julia/packages/
 
 # make sure shells are bash
 CMD ["/bin/bash"]
