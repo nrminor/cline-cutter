@@ -130,6 +130,7 @@ ENV JULIA_SCRATCH_TRACK_ACCESS 0
 ENV JULIA_HISTORY /scratch/.julia_history
 COPY Project.toml /opt/.julia/environments/v1.10/Project.toml
 COPY Manifest.toml /opt/.julia/environments/v1.10/Manifest.toml
+COPY config/startup.jl /opt/.julia/config/startup.jl
 RUN julia -e 'using Pkg; \
             Pkg.activate(joinpath(DEPOT_PATH[1], "environments", "v1.10")); \
             Pkg.instantiate(); \
