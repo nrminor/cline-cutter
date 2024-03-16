@@ -140,17 +140,7 @@ ENV PATH=$PATH:/opt/julia-1.10.0/bin:/scratch/.julia/compiled/v1.10
 # make sure bin files are executable
 RUN chmod +x /usr/local/bin/* && \
     chmod +x /opt/julia-1.10.0/bin/* && \
-    rm -f /opt/conda/bin/cpp && \
-    chmod +x /opt/conda/bin/* && \
-    chmod +rw /opt/ && \
-    chmod -R +rwx /opt/ && \
-    chmod -R +rwx /opt/.julia/ && \
-    chmod -R +rw /opt/.julia/logs/ && \
-    chmod -R +rwx /opt/.julia/logs/* && \
-    chmod -R +rwx /opt/.julia/compiled/ && \
-    chmod -R +rwx /opt/.julia/compiled/v1.10/* && \
-    chmod -R +rwx /opt/.julia/logs/* && \
-    chmod -R +rwx /opt/.julia/packages/
+    chmod +x /opt/conda/bin/*
 
 # make sure shells are bash
 CMD ["/bin/bash"]
