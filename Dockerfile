@@ -136,7 +136,7 @@ RUN julia -e 'using Pkg; \
             Pkg.add("PrecompileTools"); \
             Pkg.precompile()'
 COPY config/startup.jl /opt/.julia/config/startup.jl
-RUN julia --startup-file=yes --optimize=3 --output-asm cline-cutter-jl.s \
+RUN julia --startup-file=yes --optimize=3 \
     -e 'using CSV, DataFrames, Pipe, PrecompileTools, VariantCallFormat, VCFTools'
 ENV PATH=$PATH:/opt/julia-1.10.0/bin:/scratch/.julia/compiled/v1.10
 
