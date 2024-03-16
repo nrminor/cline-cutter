@@ -1,4 +1,4 @@
-#!/usr/bin/env -S julia --threads auto --history-file=no
+#!/usr/bin/env -S julia --threads auto --history-file=no --startup-file=no
 
 using CSV, DataFrames
 using Pipe: @pipe
