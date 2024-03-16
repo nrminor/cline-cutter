@@ -137,6 +137,10 @@ RUN julia -e 'using Pkg; \
 RUN julia -e 'using CSV, DataFrames, Pipe, VariantCallFormat, VCFTools'
 ENV PATH=$PATH:/opt/julia-1.10.0/bin:/scratch/.julia/compiled/v1.10
 
+# fix libgsl for entropy
+RUN ln /usr/lib/x86_64-linux-gnu/libgsl.so /usr/lib/x86_64-linux-gnu/libgsl.so.25
+ENV LD_LIBRARY_PATH $LD_LIBRARY_PATH:/usr/lib/x86_64-linux-gnu
+
 # make sure bin files are executable
 RUN chmod +x /usr/local/bin/* && \
     chmod +x /opt/julia-1.10.0/bin/* && \
