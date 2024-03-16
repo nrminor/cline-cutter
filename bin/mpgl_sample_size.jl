@@ -91,4 +91,4 @@ end
 
 # use short-circuiting to see if the function should run when the script is
 # executed
-isfile(ARGS[1]) && main(ARGS)
+length(ARGS) > 0 && isfile(ARGS[1]) && main(ARGS)
