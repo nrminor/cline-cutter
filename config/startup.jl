@@ -11,6 +11,7 @@ using PrecompileTools
         using DataFrames
         using Logging
         using Pipe
+        using PrecompileTools
         using VCFTools
         using VariantCallFormat
         using AbbreviatedStackTraces

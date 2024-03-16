@@ -409,7 +409,7 @@ process CREATE_Q_PRIORS {
 	tuple path(mpgl), path("*.txt")
 
 	script:
-	sample_regime = mpgl.getSimpleName()
+	sample_regime = file(mpgl.toString()).getSimpleName()
 	"""
 	mpgl_sample_size.jl ${mpgl} ${params.starting_q} ${sample_regime}
 	"""
