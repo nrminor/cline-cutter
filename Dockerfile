@@ -130,7 +130,7 @@ ENV JULIA_SCRATCH_TRACK_ACCESS 0
 ENV JULIA_HISTORY /scratch/.julia_history
 COPY Project.toml /opt/.julia/environments/v1.10/Project.toml
 COPY Manifest.toml /opt/.julia/environments/v1.10/Manifest.toml
-RUN julia -e 'using Pkg; \
+RUN julia --optimize=3 -e 'using Pkg; \
             Pkg.activate(joinpath(DEPOT_PATH[1], "environments", "v1.10")); \
             Pkg.instantiate(); \
             Pkg.add("PrecompileTools"); \

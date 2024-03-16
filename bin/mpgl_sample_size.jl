@@ -1,4 +1,4 @@
-#!/usr/bin/env -S julia --threads auto --gcthreads=3 --history-file=no
+#!/usr/bin/env -S julia --threads auto --gcthreads=3 --history-file=no --startup-file=no
 
 using Base.Iterators
 using Logging
