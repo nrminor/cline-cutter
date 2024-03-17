@@ -11,6 +11,9 @@ resources/GCA_014549065.1_CCar_1.0_genomic.fna
 .Rhistory
 .julia_history
 ._*
+scratch*
+sandbox*
+*tmp*
 .nextflow.log*
 .nextflow.pid*
 submit_workflow.sh

@@ -77,7 +77,7 @@ workflow {
 	)
 
     CONVERT_TO_MPGL (
-        RUN_DOWNSAMPLING.out.vcf.flatten()
+        RUN_DOWNSAMPLING.out.vcf.collect()
     )
 
 	CREATE_Q_PRIORS (
@@ -97,6 +97,10 @@ workflow {
 			.mix(RECORD_FINAL_ROSTER.out.collect())
 			.collect()
     )
+
+	EVAL_MODEL_PERFORMANCE (
+		FIT_CLINE_MODELS.out.modeling_logs
+	)
 
 
 }
@@ -319,11 +323,11 @@ process RUN_DOWNSAMPLING {
 	"""
 	sample-by-coordinate.py \
 	--vcf ${vcf} \
-	--proportion 0.8 \
+	--proportion ${params.proportion} \
 	--metadata ${samplesheet} \
-	--distance_threshold 100 \
+	--distance_threshold ${params.distance_threshold} \
 	--cores ${task.cpus} \
-	--seed 14
+	--seed ${params.random_seed}
 	"""
 
 }
@@ -362,14 +366,14 @@ process CONVERT_TO_MPGL {
 	time '1h'
 
 	input:
-	path vcf
+	path vcf_files
 
 	output:
 	path "*.mpgl"
 
 	script:
 	"""
-	vcf2mpgl.R ${vcf}
+	vcf2mpgl.jl
 	"""
 
 }
@@ -442,13 +446,37 @@ process FIT_CLINE_MODELS {
     path metadata_files
 
 	output:
+	path "*", emit: all_files
+	tuple val(subsample), path("${subsample}_model_logs.txt"), emit: modeling_logs
+
+	script:
+	"""
+	cline_fitting.R &> ${subsample}_model_logs.txt
+	"""
+
+}
+
+process EVAL_MODEL_PERFORMANCE {
+
+	/* */
+
+	tag "${subsample}"
+	publishDir params.clines, mode: 'copy'
+
+    cpus 1
+	time '10m'
+
+	input:
+	tuple val(subsample), path(modeling_logs)
+
+	output:
 	path "*"
 
 	script:
 	"""
-	cline_fitting.R && \
 	collate_model_evals.py "${subsample}" ".command.log"
 	"""
+
 
 }
 
