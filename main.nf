@@ -380,6 +380,9 @@ process CREATE_Q_PRIORS {
 
 	tag "${sample_regime}"
 
+    cpus 1
+	time '10m'
+
 	input:
 	path mpgl
 
