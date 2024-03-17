@@ -83,8 +83,7 @@ function parse_fitting_log(fitting_log::String, regime::String)::Tuple{DataFrame
 
         return (score_df, output_name)
     end
-end;
-precompile(parse_fitting_log, (String, String))
+end
 
 """
 The function `join_model_evals()` uses a simple leftjoin to combine AIC information
@@ -136,7 +135,6 @@ function main()
         rm(aic_files[1])
     end
 
-end;
-precompile(main, ())
+end
 
 length(ARGS) > 0 && main()

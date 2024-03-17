@@ -30,7 +30,6 @@ function compute_mpgl_sample_size(mpgl_path::String)
 
     return sample_size
 end
-precompile(compute_mpgl_sample_size, (String,))
 
 
 """
@@ -47,7 +46,6 @@ function write_starting_qs(sample_size::Int64, starting_q::Float64, label::Strin
     end
 
 end
-precompile(write_starting_qs, (Int64, Float64, String))
 
 
 function main(args::Vector{String})
