@@ -327,7 +327,7 @@ process RUN_DOWNSAMPLING {
 	--metadata ${samplesheet} \
 	--distance_threshold ${params.distance_threshold} \
 	--cores ${task.cpus} \
-	--seed ${params.random_seed}
+	--seed 14
 	"""
 
 }
@@ -391,7 +391,7 @@ process CREATE_Q_PRIORS {
 	path mpgl
 
 	output:
-	tuple path(mpgl), path("*_starting_q.txt")
+	tuple path(mpgl), path("*.txt")
 
 	script:
 	sample_regime = file(mpgl.toString()).getSimpleName().replace(".recode", "")
