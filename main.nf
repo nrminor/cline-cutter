@@ -138,9 +138,7 @@ params.clines = params.analyses + "/2_clines"
 
 process DEMULTIPLEX_READS {
 
-	/*
-    This process does something described here
-    */
+	/* */
 
 	publishDir params.demux, mode: 'copy'
 
@@ -156,9 +154,7 @@ process DEMULTIPLEX_READS {
 
 process INDEX_FOR_MAPPING {
 
-	/*
-    This process does something described here
-    */
+	/* */
 
 	tag "${sample}"
 
@@ -173,9 +169,7 @@ process INDEX_FOR_MAPPING {
 
 process MAP_WITH_BWA {
 
-	/*
-    This process does something described here
-    */
+	/* */
 
 	tag "${sample}"
 
@@ -192,9 +186,7 @@ process MAP_WITH_BWA {
 
 process CONVERT_AND_INDEX {
 
-	/*
-    This process does something described here
-    */
+	/* */
 
 	tag "${sample}"
 	publishDir params.alignments, mode: 'copy'
@@ -212,9 +204,7 @@ process CONVERT_AND_INDEX {
 
 process VARIANT_CALL {
 
-	/*
-    This process does something described here
-    */
+	/* */
 
 	tag "${tag}"
 	publishDir params.variants, mode: 'copy'
@@ -232,9 +222,7 @@ process VARIANT_CALL {
 
 process VCF_FILTERING {
 
-	/*
-    This process does something described here
-    */
+	/* */
 
 	publishDir params.filtered, mode: 'copy'
 
@@ -258,9 +246,7 @@ process VCF_FILTERING {
 
 process SNP_THINNING {
 
-	/*
-    This process does something described here
-    */
+	/* */
 
 	publishDir params.thinned, mode: 'copy'
 
@@ -283,9 +269,7 @@ process SNP_THINNING {
 
 process FILTER_INDIVS {
 
-	/*
-    This process does something described here
-    */
+	/* */
 
 	publishDir params.no_missing, mode: 'copy'
 
@@ -317,9 +301,7 @@ process FILTER_INDIVS {
 
 process RUN_DOWNSAMPLING {
 
-	/*
-    This process does something described here
-    */
+	/* */
 
 	publishDir params.downsampled, mode: 'copy'
 
@@ -372,9 +354,7 @@ process RECORD_FINAL_ROSTER {
 
 process CONVERT_TO_MPGL {
 
-	/*
-    This process does something described here
-    */
+	/* */
 
 	publishDir params.entropy, mode: 'copy'
 
@@ -382,10 +362,10 @@ process CONVERT_TO_MPGL {
 	time '1h'
 
 	input:
-	tuple path(vcf)
+	path vcf
 
 	output:
-	tuple path("*.mpgl")
+	path "*.mpgl"
 
 	script:
 	"""
@@ -396,9 +376,7 @@ process CONVERT_TO_MPGL {
 
 process CREATE_Q_PRIORS {
 
-	/*
-    This process does something described here
-    */
+	/* */
 
     cpus 3
 
@@ -418,9 +396,7 @@ process CREATE_Q_PRIORS {
 
 process RUN_ENTROPY {
 
-	/*
-    This process does something described here
-    */
+	/* */
 
 	tag "${subsample}"
 	publishDir params.entropy, mode: 'copy'
@@ -450,9 +426,7 @@ process RUN_ENTROPY {
 
 process FIT_CLINE_MODELS {
 
-	/*
-    This process does something described here
-    */
+	/* */
 
 	tag "${subsample}"
 	publishDir params.clines, mode: 'copy'
