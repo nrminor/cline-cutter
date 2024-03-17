@@ -5,6 +5,7 @@ TODO
 """
 
 import os
+import re
 import sys
 from pathlib import Path
 from typing import Tuple
@@ -51,13 +52,14 @@ def parse_fitting_log(fitting_log: Path, regime: str) -> Tuple[pl.LazyFrame, str
 
     # parse out the names of the models
     special_char_pattern = r"[!-,\.-\/:-@\[-\^`\{-~\s]+"
+    cleaned_lines = [re.sub(special_char_pattern, "", line) for line in lines]
     model_names = [
         (
             line.replace("Fitting model labeled '", "")
             .replace("':", "")
             .replace(special_char_pattern, "")
         )
-        for line in lines
+        for line in cleaned_lines
         if line.contains("Fitting model labeled")
     ]
 

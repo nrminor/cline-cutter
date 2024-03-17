@@ -474,7 +474,7 @@ process EVAL_MODEL_PERFORMANCE {
 
 	script:
 	"""
-	collate_model_evals.py "${subsample}" ".command.log"
+	collate_model_evals.py "${subsample}" "${subsample}_model_logs.txt"
 	"""
 
 
