@@ -378,8 +378,6 @@ process CREATE_Q_PRIORS {
 
 	/* */
 
-    cpus 3
-
 	input:
 	path mpgl
 
