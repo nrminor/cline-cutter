@@ -378,14 +378,16 @@ process CREATE_Q_PRIORS {
 
 	/* */
 
+	tag "${sample_regime}"
+
 	input:
 	path mpgl
 
 	output:
-	tuple path(mpgl), path("*.txt")
+	tuple path(mpgl), path("*_starting_q.txt")
 
 	script:
-	sample_regime = file(mpgl.toString()).getSimpleName()
+	sample_regime = file(mpgl.toString()).getSimpleName().replace(".recode", "")
 	"""
 	mpgl_sample_size.py -m ${mpgl} -q ${params.starting_q} -l ${sample_regime}
 	"""
@@ -396,7 +398,7 @@ process RUN_ENTROPY {
 
 	/* */
 
-	tag "${subsample}"
+	tag "${subsample}, ${random_seed}"
 	publishDir params.entropy, mode: 'copy'
 
     cpus 8
