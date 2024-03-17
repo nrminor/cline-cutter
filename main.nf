@@ -77,11 +77,11 @@ workflow {
 	)
 
     CONVERT_TO_MPGL (
-        RUN_DOWNSAMPLING.out.vcf
+        RUN_DOWNSAMPLING.out.vcf.flatten()
     )
 
 	CREATE_Q_PRIORS (
-		CONVERT_TO_MPGL.out.flatten()
+		CONVERT_TO_MPGL.out
 	)
 
     RUN_ENTROPY (
@@ -378,18 +378,18 @@ process CONVERT_TO_MPGL {
 
 	publishDir params.entropy, mode: 'copy'
 
-    cpus 12
+    cpus 1
 	time '1h'
 
 	input:
-	path vcf_files
+	tuple path(vcf)
 
 	output:
-	path "*.mpgl"
+	tuple path("*.mpgl")
 
 	script:
 	"""
-	vcf2mpgl.jl ./
+	vcf2mpgl.R ${vcf}
 	"""
 
 }
@@ -411,7 +411,7 @@ process CREATE_Q_PRIORS {
 	script:
 	sample_regime = file(mpgl.toString()).getSimpleName()
 	"""
-	mpgl_sample_size.jl ${mpgl} ${params.starting_q} ${sample_regime}
+	mpgl_sample_size.py -m ${mpgl} -q ${params.starting_q} -l ${sample_regime}
 	"""
 
 }
@@ -470,7 +470,7 @@ process FIT_CLINE_MODELS {
 	script:
 	"""
 	cline_fitting.R && \
-	collate_model_evals.jl "${subsample}" ".command.log"
+	collate_model_evals.py "${subsample}" ".command.log"
 	"""
 
 }
