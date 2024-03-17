@@ -81,7 +81,7 @@ workflow {
     )
 
 	CREATE_Q_PRIORS (
-		CONVERT_TO_MPGL.out
+		CONVERT_TO_MPGL.out.flatten()
 	)
 
     RUN_ENTROPY (
