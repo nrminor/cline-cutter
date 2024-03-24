@@ -115,7 +115,7 @@ def join_model_evals(score_df: pl.LazyFrame, aic_file: Path, sampling_regime: st
         "AICc" in aic_df.columns
     ), "Expected 'AICc' column is missing in the AIC score table."
 
-    score_df.join(aic_df, how="left", left_on="Model Label", right_on="model").sink_csv(
+    aic_df.join(score_df, how="left", left_on="model", right_on="Model Label").sink_csv(
         writeout_name
     )
 
@@ -138,16 +138,19 @@ def main() -> None:
         if "aic.tsv" in file and sampling_regime in file
     ]
 
-    if len(aic_files) == 1:
-        full_table = join_model_evals(score_df, aic_files[0], sampling_regime)
-        print(
-            f"""
-            Model Akaike Information Criteria and Metropolis acceptance rates written
-            to {full_table} in the current working directory. Deleting input tables.
-            """
-        )
-        os.remove(writeout_name)
-        os.remove(aic_files[0])
+    if not len(aic_files) == 1:
+        print("AIC file not found. Finishing here.")
+        sys.exit(0)
+
+    full_table = join_model_evals(score_df, aic_files[0], sampling_regime)
+    assert os.path.isfile(full_table), f"Writing of {full_table} failed."
+    print(
+        f"""
+        Model Akaike Information Criteria and Metropolis acceptance rates written
+        to {full_table} in the current working directory. Deleting input tables.
+        """
+    )
+    os.remove(writeout_name)
 
 
 if __name__ == "__main__":
