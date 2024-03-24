@@ -133,9 +133,10 @@ def main() -> None:
     print(f"Parsed logging information written out to {writeout_name}")
 
     aic_files = [
-        file
+        str(os.path.realpath(file))
         for file in os.listdir(".")
-        if "aic.tsv" in file and sampling_regime in file
+        if "aic.tsv" in str(os.path.realpath(file))
+        and sampling_regime in str(os.path.realpath(file))
     ]
 
     if not len(aic_files) == 1:
