@@ -47,8 +47,9 @@ def parse_fitting_log(fitting_log: Path, regime: str) -> Tuple[pl.LazyFrame, str
 
     output_name = f"{regime}_regime_metropolis_rates.csv"
 
-    # pylint: disable-next=R1732
-    lines = open(fitting_log, "r", encoding="utf8").readlines().close()
+    # collect the lines of the log file
+    with open(fitting_log, "r", encoding="utf8") as log_handle:
+        lines = log_handle.readlines().close()
 
     # parse out the names of the models
     special_char_pattern = r"[!-,\.-\/:-@\[-\^`\{-~\s]+"
