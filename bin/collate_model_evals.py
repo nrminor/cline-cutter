@@ -49,7 +49,7 @@ def parse_fitting_log(fitting_log: Path, regime: str) -> Tuple[pl.LazyFrame, str
 
     # collect the lines of the log file
     with open(fitting_log, "r", encoding="utf8") as log_handle:
-        lines = log_handle.readlines().close()
+        lines = log_handle.readlines()
 
     # parse out the names of the models
     special_char_pattern = r"[!-,\.-\/:-@\[-\^`\{-~\s]+"
