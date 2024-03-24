@@ -132,12 +132,11 @@ def main() -> None:
     score_df, writeout_name = parse_fitting_log(fitting_log, sampling_regime)
     print(f"Parsed logging information written out to {writeout_name}")
 
-    print(os.listdir("."))
     aic_files = [
         str(os.path.realpath(file))
         for file in os.listdir(".")
         if "aic.tsv" in str(os.path.realpath(file))
-        and sampling_regime in str(os.path.realpath(file))
+        and sampling_regime.split("_")[0] in str(os.path.realpath(file))
     ]
 
     if not len(aic_files) == 1:
