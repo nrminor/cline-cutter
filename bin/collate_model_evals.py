@@ -61,7 +61,7 @@ def parse_fitting_log(fitting_log: Path, regime: str) -> Tuple[pl.LazyFrame, str
             .replace(special_char_pattern, "")
         )
         for line in cleaned_lines
-        if line.contains("Fitting model labeled")
+        if "Fitting model labeled" in line
     ]
 
     # make sure it was able to parse model names with the expected susbtrings
@@ -73,7 +73,7 @@ def parse_fitting_log(fitting_log: Path, regime: str) -> Tuple[pl.LazyFrame, str
     model_scores = [
         line.replace("The Metropolis acceptance rate was " "")
         for line in lines
-        if line.contains("The Metropolis acceptance rate was")
+        if "The Metropolis acceptance rate was" in line
     ]
 
     # make sure it was able to parse model scores with the expected susbtrings
