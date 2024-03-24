@@ -8,7 +8,6 @@ nextflow.enable.dsl = 2
 // --------------------------------------------------------------- //
 workflow {
 
-
 	// input channels
     ch_reads = Channel
         .fromPath( "${params.input_dir}/*.fastq.gz" )
@@ -17,47 +16,20 @@ workflow {
     ch_seeds = Channel
         .of( 1, 2, 3 )
 
+	// ch_proportions = Channel
+	// 	.of( 0.5, 0.8, 0.9 )
+
     ch_sample_meta = Channel
         .fromPath( params.samplesheet )
 
+	ch_vcf = Channel
+		.fromPath( params.precalled_vcf )
 
-	// Workflow steps
-	if ( params.precalled_vcf == "" ){
 
-		DEMULTIPLEX_READS (
-			ch_reads
-		)
-
-		INDEX_FOR_MAPPING ()
-
-		MAP_WITH_BWA (
-			DEMULTIPLEX_READS.out.flatten(),
-			INDEX_FOR_MAPPING.out
-		)
-
-		CONVERT_AND_INDEX (
-			MAP_WITH_BWA.out
-		)
-
-		VARIANT_CALL (
-			CONVERT_AND_INDEX.out.bam.collect(),
-			CONVERT_AND_INDEX.out.bai.collect()
-		)
-
-		VCF_FILTERING (
-			VARIANT_CALL.out
-		)
-
-	} else {
-
-		ch_vcf = Channel
-			.fromPath( params.precalled_vcf )
-
-		VCF_FILTERING (
-			ch_vcf
-		)
-
-	}
+	// Processes
+	VCF_FILTERING (
+		ch_vcf
+	)
 
     SNP_THINNING (
         VCF_FILTERING.out
@@ -66,6 +38,10 @@ workflow {
     FILTER_INDIVS (
         SNP_THINNING.out
     )
+
+	// ch_sample_meta
+	// 	.combine( ch_proportions )
+	// 	.view()
 
 	RUN_DOWNSAMPLING (
 		FILTER_INDIVS.out,
@@ -112,14 +88,8 @@ workflow {
 // --------------------------------------------------------------- //
 // Additional parameters that are derived from parameters set in nextflow.config
 
-// Demultiplexed FASTQ files
-params.demux = params.results + "/1_demux"
-
-// Alignments
-params.alignments = params.results + "/2_alignments"
-
 // VCF files
-params.variants = params.results + "/3_VCF_files"
+params.variants = params.results + "/1_VCF_files"
 
 // VCFs sub-results
 params.filtered = params.variants + "/1_filtered"
@@ -128,7 +98,7 @@ params.no_missing = params.variants + "/3_no_missing_indiv"
 params.downsampled = params.variants + "/4_downsampled"
 
 // Analyses and visualizations
-params.analyses = params.results + "/4_analyses"
+params.analyses = params.results + "/2_analyses"
 params.entropy = params.analyses + "/1_entropy"
 params.clines = params.analyses + "/2_clines"
 
@@ -139,90 +109,6 @@ params.clines = params.analyses + "/2_clines"
 
 // PROCESS SPECIFICATION
 // --------------------------------------------------------------- //
-
-process DEMULTIPLEX_READS {
-
-	/* */
-
-	publishDir params.demux, mode: 'copy'
-
-	input:
-
-	output:
-    path "*.fastq.gz"
-
-	script:
-	"""
-	"""
-}
-
-process INDEX_FOR_MAPPING {
-
-	/* */
-
-	tag "${sample}"
-
-	input:
-
-	output:
-
-	script:
-	"""
-	"""
-}
-
-process MAP_WITH_BWA {
-
-	/* */
-
-	tag "${sample}"
-
-    cpus 8
-
-	input:
-
-	output:
-
-	script:
-	"""
-	"""
-}
-
-process CONVERT_AND_INDEX {
-
-	/* */
-
-	tag "${sample}"
-	publishDir params.alignments, mode: 'copy'
-
-    cpus 4
-
-	input:
-
-	output:
-
-	script:
-	"""
-	"""
-}
-
-process VARIANT_CALL {
-
-	/* */
-
-	tag "${tag}"
-	publishDir params.variants, mode: 'copy'
-
-    cpus 8
-
-	input:
-
-	output:
-
-	script:
-	"""
-	"""
-}
 
 process VCF_FILTERING {
 
@@ -447,7 +333,7 @@ process FIT_CLINE_MODELS {
 
 	output:
 	path "*", emit: all_files
-	tuple val(subsample), path("${subsample}_model_logs.txt"), emit: modeling_logs
+	tuple val(subsample), path("${subsample}_model_logs.txt"), path("*_aic.tsv"), emit: modeling_logs
 
 	script:
 	"""
@@ -467,7 +353,7 @@ process EVAL_MODEL_PERFORMANCE {
 	time '10m'
 
 	input:
-	tuple val(subsample), path(modeling_logs)
+	tuple val(subsample), path(modeling_logs), path(aic_values)
 
 	output:
 	path "*"

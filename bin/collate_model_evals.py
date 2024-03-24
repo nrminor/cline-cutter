@@ -52,14 +52,10 @@ def parse_fitting_log(fitting_log: Path, regime: str) -> Tuple[pl.LazyFrame, str
         lines = log_handle.readlines()
 
     # parse out the names of the models
-    special_char_pattern = r"[!-,\.-\/:-@\[-\^`\{-~\s]+"
+    special_char_pattern = r"[!-,\.-\/:-@\[-\^`\{-~\n\r]+"
     cleaned_lines = [re.sub(special_char_pattern, "", line) for line in lines]
     model_names = [
-        (
-            line.replace("Fitting model labeled '", "")
-            .replace("':", "")
-            .replace(special_char_pattern, "")
-        )
+        (line.replace("Fitting model labeled ", "").replace("':", ""))
         for line in cleaned_lines
         if "Fitting model labeled" in line
     ]
@@ -67,11 +63,11 @@ def parse_fitting_log(fitting_log: Path, regime: str) -> Tuple[pl.LazyFrame, str
     # make sure it was able to parse model names with the expected susbtrings
     assert (
         len(model_names) > 0
-    ), "Unable to parse any model names in the provided log $fitting_log"
+    ), f"Unable to parse any model names in the provided log {fitting_log}"
 
     # parse our the Metropolis scores for each model
     model_scores = [
-        line.replace("The Metropolis acceptance rate was " "")
+        float(line.replace("The Metropolis acceptance rate was ", ""))
         for line in lines
         if "The Metropolis acceptance rate was" in line
     ]
@@ -109,7 +105,7 @@ def join_model_evals(score_df: pl.LazyFrame, aic_file: Path, sampling_regime: st
     model fitted in the R script `cline_fitting.R`.
     """
 
-    aic_df = pl.scan_csv(aic_file)
+    aic_df = pl.scan_csv(aic_file, separator="\t")
     writeout_name = f"{sampling_regime}_regime_model_evals.csv"
 
     assert (
@@ -119,7 +115,9 @@ def join_model_evals(score_df: pl.LazyFrame, aic_file: Path, sampling_regime: st
         "AICc" in aic_df.columns
     ), "Expected 'AICc' column is missing in the AIC score table."
 
-    score_df.join(aic_df, how="left", on="Model Label").sink_csv(writeout_name)
+    score_df.join(aic_df, how="left", left_on="Model Label", right_on="model").sink_csv(
+        writeout_name
+    )
 
     return writeout_name
 
@@ -132,16 +130,16 @@ def main() -> None:
     fitting_log = sys.argv[2]
 
     score_df, writeout_name = parse_fitting_log(fitting_log, sampling_regime)
-    print("Parsed logging information written out to $writeout_name")
+    print(f"Parsed logging information written out to {writeout_name}")
 
     aic_files = [
         file
         for file in os.listdir(".")
-        if file.contains("aic.tsv") and file.contains(sampling_regime)
+        if "aic.tsv" in file and sampling_regime in file
     ]
 
     if len(aic_files) == 1:
-        full_table = join_model_evals(score_df, aic_files[1], sampling_regime)
+        full_table = join_model_evals(score_df, aic_files[0], sampling_regime)
         print(
             f"""
             Model Akaike Information Criteria and Metropolis acceptance rates written
@@ -149,7 +147,7 @@ def main() -> None:
             """
         )
         os.remove(writeout_name)
-        os.remove(aic_files[1])
+        os.remove(aic_files[0])
 
 
 if __name__ == "__main__":
