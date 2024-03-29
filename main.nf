@@ -6,18 +6,68 @@ nextflow.enable.dsl = 2
 
 // WORKFLOW SPECIFICATION
 // --------------------------------------------------------------- //
+
+// prints to the screen and to the log
+// shout out to the following for the ascii art:
+// https://patorjk.com/software/taag/#p=testall&f=Graffiti&t=Cline%20Cutter
+log.info	"""
+
+			..######..##.......####.##....##.########.....######..##.....##.########.########.########.########.
+			.##....##.##........##..###...##.##..........##....##.##.....##....##.......##....##.......##.....##
+			.##.......##........##..####..##.##..........##.......##.....##....##.......##....##.......##.....##
+			.##.......##........##..##.##.##.######......##.......##.....##....##.......##....######...########.
+			.##.......##........##..##..####.##..........##.......##.....##....##.......##....##.......##...##..
+			.##....##.##........##..##...###.##..........##....##.##.....##....##.......##....##.......##....##.
+			..######..########.####.##....##.########.....######...#######.....##.......##....########.##.....##
+
+			CLINE-CUTTER:
+			A Master's Project from University of Wyoming Exploring How Space and Sampling
+			Affect Cline Modeling across an Avian Hybrid Zone
+			(version 0.1.0)
+			===============================================================================
+
+			Inputs:
+			------------------------------------------
+			Project name       : ${params.project_name}
+			Samplesheet        : ${params.samplesheet}
+			Pre-called VCF     : ${params.precalled_vcf}
+
+			Variant Filtering Settings:
+			-------------------------------------------
+			Minor allele freq. : ${params.maf}
+			Max missingness    : ${params.max_missing}
+			HWE cutoff         : ${params.hwe}
+			LD thinning cutoff : ${params.thinning}
+
+			Downsampling Settings:
+			-------------------------------------------
+			Proportions        : ${params.proportions}
+			Seeds              : ${params.seeds}
+			Distance threshold : ${params.distance_threshold}
+
+			Modeling Settings:
+			-------------------------------------------
+			Hybrid index prior : ${params.starting_q}
+			Seeds              : ${params.seeds}
+
+			"""
+			.stripIndent()
+
+
 workflow {
 
+	assert params.precalled_vcf.endsWith(".vcf") : "Input VCF must be uncompressed and end with '.vcf'."
+
 	// input channels
-    ch_reads = Channel
-        .fromPath( "${params.input_dir}/*.fastq.gz" )
-		.collect()
-
     ch_seeds = Channel
-        .of( 1, 2, 3 )
+        .of( params.seeds )
+		.splitCsv( header: false )
+		.flatMap( x -> x.stripIndent().toInteger() )
 
-	// ch_proportions = Channel
-	// 	.of( 0.5, 0.8, 0.9 )
+	ch_proportions = Channel
+        .of( params.proportions )
+		.splitCsv( header: false )
+		.flatMap( x -> x.stripIndent().toFloat() )
 
     ch_sample_meta = Channel
         .fromPath( params.samplesheet )
@@ -39,13 +89,13 @@ workflow {
         SNP_THINNING.out
     )
 
-	// ch_sample_meta
-	// 	.combine( ch_proportions )
-	// 	.view()
-
 	RUN_DOWNSAMPLING (
 		FILTER_INDIVS.out,
 		ch_sample_meta
+			.combine(
+				ch_proportions
+					.combine( ch_proportions )
+			)
 	)
 
 	RECORD_FINAL_ROSTER (
@@ -126,9 +176,13 @@ process VCF_FILTERING {
 
 	script:
 	subsample = file(vcf.toString()).getSimpleName().replace("_sample", "")
+	assert vcf.toString().endsWith(".vcf") : "Input VCF must be uncompressed and end with '.vcf'."
 	"""
-	vcftools --vcf ${vcf} --min-alleles 2 --max-alleles 2 \
-    --maf 0.05 --max-missing 0.7 --recode --recode-INFO-all \
+	vcftools \
+	--vcf ${vcf} \
+	--min-alleles 2 --max-alleles 2 \
+    --maf ${params.maf} --max-missing ${params.max_missing} --hwe ${params.hwe} \
+	--recode --recode-INFO-all \
     --out ${params.project_name}_${subsample}
 	"""
 
@@ -151,7 +205,10 @@ process SNP_THINNING {
 	script:
 	simple_name = file(vcf.toString()).getSimpleName()
 	"""
-	vcftools --vcf ${vcf} --thin 20000 --recode --recode-INFO-all \
+	vcftools \
+	--vcf ${vcf} \
+	--thin ${params.thinning} \
+	--recode --recode-INFO-all \
     --out ${simple_name}_thinned
 	"""
 
@@ -199,8 +256,8 @@ process RUN_DOWNSAMPLING {
 	time '6h'
 
 	input:
-	path vcf
-	path samplesheet
+	each path(vcf)
+	tuple path(samplesheet), val(proportion), val(seed)
 
 	output:
 	path "*.vcf", emit: vcf
@@ -209,11 +266,11 @@ process RUN_DOWNSAMPLING {
 	"""
 	sample-by-coordinate.py \
 	--vcf ${vcf} \
-	--proportion ${params.proportion} \
+	--proportion ${proportion} \
 	--metadata ${samplesheet} \
 	--distance_threshold ${params.distance_threshold} \
 	--cores ${task.cpus} \
-	--seed 14
+	--seed ${seed}
 	"""
 
 }
@@ -229,15 +286,19 @@ process RECORD_FINAL_ROSTER {
 	time '10m'
 
 	input:
-	path vcf
+	path(vcf)
 
 	output:
 	path "*.txt"
 
 	script:
-	downsampling_regime = file(vcf.toString()).getSimpleName()
+	file_base = file(vcf.toString()).getSimpleName().split(".recode")[0]
+	name_parts = file_base.split("_")
+	downsampling_regime = name_parts[0]
+	proportion = name_parts[1]
+	seed = name_parts[2]
 	"""
-	bcftools query -l ${vcf} > ${downsampling_regime}.txt
+	bcftools query -l ${vcf} > ${downsampling_regime}_${proportion}_${seed}.txt
 	"""
 
 }
@@ -277,12 +338,19 @@ process CREATE_Q_PRIORS {
 	path mpgl
 
 	output:
-	tuple path(mpgl), path("*.txt")
+	tuple path(mpgl), path("*.txt"), val(proportion), val(seed)
 
 	script:
-	sample_regime = file(mpgl.toString()).getSimpleName().replace(".recode", "")
+	file_base = file(vcf.toString()).getSimpleName().split(".recode")[0]
+	name_parts = file_base.split("_")
+	downsampling_regime = name_parts[0]
+	proportion = name_parts[1]
+	seed = name_parts[2]
 	"""
-	mpgl_sample_size.py -m ${mpgl} -q ${params.starting_q} -l ${sample_regime}
+	mpgl_sample_size.py \
+	-m ${mpgl} \
+	-q ${params.starting_q} \
+	-l ${sample_regime}_${proportion}_${seed}
 	"""
 
 }
@@ -292,14 +360,13 @@ process RUN_ENTROPY {
 	/* */
 
 	tag "${subsample}, ${random_seed}"
-	publishDir params.entropy, mode: 'copy'
+	publishDir "${params.entropy}/${subsample}", mode: 'copy'
 
     cpus 8
 	time '7d'
 
 	input:
-    each random_seed
-	tuple path(mpgl), path(starting_q)
+	tuple path(mpgl), path(starting_q), val(proportion), val(seed)
 
 	output:
 	tuple val(subsample), path("*.hdf5")
@@ -308,9 +375,9 @@ process RUN_ENTROPY {
 	subsample = file(mpgl.toString()).getSimpleName()
 	"""
 	entropy -i ${mpgl} \
-    -r ${random_seed} -q ${starting_q} \
+    -r ${seed} -q ${starting_q} \
     -m 1 -n 2 -k 2 -w 1 -Q 1 -l 120000 -b 30000 -t 30 \
-    -o ${subsample}_${random_seed}.hdf5
+    -o ${subsample}_${proportion}_${seed}.hdf5
 	"""
 
 }
@@ -322,7 +389,7 @@ process FIT_CLINE_MODELS {
 	/* */
 
 	tag "${subsample}"
-	publishDir params.clines, mode: 'copy'
+	publishDir "${params.clines}/${subsample}", mode: 'copy'
 
     cpus 1
 	time '8h'
@@ -347,7 +414,7 @@ process EVAL_MODEL_PERFORMANCE {
 	/* */
 
 	tag "${subsample}"
-	publishDir params.clines, mode: 'copy'
+	publishDir "${params.clines}/${subsample}", mode: 'copy'
 
     cpus 1
 	time '10m'

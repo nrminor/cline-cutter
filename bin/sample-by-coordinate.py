@@ -9,7 +9,7 @@ and latitude/longitude coordinates with a metadata file, and downsamples
 each VCF according to its population "cluster". To do so, it computes a
 geographic distance matrix for all samples according to their coordinates,
 and groups samples together by their proximity. It then downsamples the
-VCFs randomly, evenly, and unevenly across population clusters (more 
+VCFs randomly, evenly, and unevenly across population clusters (more
 granular explanation in the function docstrings below). The purpose of
 this downsampling is to stress-test population genomic analyses whose
 resolution or precision may be affected not only by sample size, but
@@ -256,7 +256,7 @@ def create_sample_lists(
     # even sampling
     even_df = cluster_df.clear()
     even_dict = cluster_df.partition_by(by="cluster", as_dict=True)
-    for key in even_dict: # pylint: disable=E1133
+    for key in even_dict:  # pylint: disable=E1133
         sub_df = even_dict.get(key)
         if sub_df.shape[0] == 1:
             # whether_to_keep = bool(random.getrandbits(1))
@@ -333,7 +333,7 @@ def main():
             f"{sample_type}.txt",
             "--recode",
             "--out",
-            sample_type,
+            f"{sample_type}_{proportion}_{seed}",
         ]
         for sample_type in sample_types
     ]
