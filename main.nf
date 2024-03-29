@@ -111,7 +111,6 @@ workflow {
 	)
 
     RUN_ENTROPY (
-        ch_seeds,
         CREATE_Q_PRIORS.out
     )
 
