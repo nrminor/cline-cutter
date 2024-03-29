@@ -331,7 +331,7 @@ process CREATE_Q_PRIORS {
 
 	/* */
 
-	tag "${sample_regime}"
+	tag "${downsampling_regime}, ${proportion}, ${seed}"
 
     cpus 1
 	time '10m'
@@ -352,7 +352,7 @@ process CREATE_Q_PRIORS {
 	mpgl_sample_size.py \
 	-m ${mpgl} \
 	-q ${params.starting_q} \
-	-l ${sample_regime}_${proportion}_${seed}
+	-l ${downsampling_regime}_${proportion}_${seed}
 	"""
 
 }
