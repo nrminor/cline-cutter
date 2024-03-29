@@ -96,9 +96,8 @@ workflow {
 		ch_sample_meta
 			.combine(
 				ch_proportions
-					.combine( ch_proportions )
+					.combine( ch_seeds )
 			)
-			.view()
 	)
 
 	RECORD_FINAL_ROSTER (
