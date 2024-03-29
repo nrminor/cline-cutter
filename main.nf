@@ -98,6 +98,7 @@ workflow {
 				ch_proportions
 					.combine( ch_proportions )
 			)
+			.view()
 	)
 
 	RECORD_FINAL_ROSTER (
@@ -251,6 +252,7 @@ process RUN_DOWNSAMPLING {
 
 	/* */
 
+	tag "${proportion}, ${seed}"
 	publishDir params.downsampled, mode: 'copy'
 
 	cpus 4
