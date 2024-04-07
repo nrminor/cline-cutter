@@ -390,8 +390,8 @@ process FIT_CLINE_MODELS {
 
 	/* */
 
-	tag "${subsample}"
-	publishDir "${params.clines}/${subsample}", mode: 'copy'
+	tag "${subsample}, ${seed}"
+	publishDir "${params.clines}/${subsample}_${seed}", mode: 'copy'
 
     cpus 1
 	time '8h'
@@ -402,11 +402,11 @@ process FIT_CLINE_MODELS {
 
 	output:
 	path "*", emit: all_files
-	tuple val(subsample), path("${subsample}_model_logs.txt"), path("*_aic.tsv"), emit: modeling_logs
+	tuple val(subsample), val(seed), path("${subsample}_model_logs.txt"), path("*_aic.tsv"), emit: modeling_logs
 
 	script:
 	"""
-	cline_fitting.R &> ${subsample}_model_logs.txt
+	cline_fitting.R &> ${subsample}_${seed}_model_logs.txt
 	"""
 
 }
@@ -416,13 +416,13 @@ process EVAL_MODEL_PERFORMANCE {
 	/* */
 
 	tag "${subsample}"
-	publishDir "${params.clines}/${subsample}", mode: 'copy'
+	publishDir "${params.clines}/${subsample}_${seed}", mode: 'copy'
 
     cpus 1
 	time '10m'
 
 	input:
-	tuple val(subsample), path(modeling_logs), path(aic_values)
+	tuple val(subsample), val(seed), path(modeling_logs), path(aic_values)
 
 	output:
 	path "*"
