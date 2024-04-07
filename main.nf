@@ -119,7 +119,7 @@ workflow {
     FIT_CLINE_MODELS (
         RUN_ENTROPY.out
 			.groupTuple( sort: true )
-			.map { sample, hdf5s -> tuple( sample, hdf5s[0], hdf5s[1], hdf5s[2] ) },
+			.map { sample, seed, hdf5s -> tuple( sample, seed, hdf5s[0], hdf5s[1], hdf5s[2] ) },
         ch_sample_meta
 			.mix(RECORD_FINAL_ROSTER.out.collect())
 			.collect()
@@ -371,7 +371,7 @@ process RUN_ENTROPY {
 	tuple path(mpgl), path(starting_q), val(proportion), val(seed)
 
 	output:
-	tuple val(subsample), path("*.hdf5")
+	tuple val(subsample), val(seed), path("*.hdf5")
 
 	script:
 	subsample = file(mpgl.toString()).getSimpleName()
@@ -397,7 +397,7 @@ process FIT_CLINE_MODELS {
 	time '8h'
 
 	input:
-	tuple val(subsample), path(hdf5_1), path(hdf5_2), path(hdf5_3)
+	tuple val(subsample), val(seed), path(hdf5_1), path(hdf5_2), path(hdf5_3)
     path metadata_files
 
 	output:
