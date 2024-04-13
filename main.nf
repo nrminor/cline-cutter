@@ -63,13 +63,13 @@ workflow {
         .of( params.seeds )
 		.splitCsv( header: false )
 		.flatten()
-		.map( x -> x.stripIndent().toInteger() )
+		.map{ x -> x.stripIndent().toInteger() }
 
 	ch_proportions = Channel
         .of( params.proportions )
 		.splitCsv( header: false )
 		.flatten()
-		.map( x -> x.stripIndent().toFloat() )
+		.map{ x -> x.stripIndent().toFloat() }
 
     ch_sample_meta = Channel
         .fromPath( params.samplesheet )
