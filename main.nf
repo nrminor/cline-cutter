@@ -119,7 +119,7 @@ workflow {
 
     FIT_CLINE_MODELS (
         RUN_ENTROPY.out
-			.groupTuple( by: [0,1], sort: true )
+			.groupTuple( by: [0,1,2], sort: true )
 			.map { sample, seed, hdf5s -> tuple( sample, seed, hdf5s[0], hdf5s[1], hdf5s[2] ) },
         ch_sample_meta
 			.mix(RECORD_FINAL_ROSTER.out.collect())
@@ -392,7 +392,7 @@ process FIT_CLINE_MODELS {
 	/* */
 
 	tag "${subsample}, ${proportion}, ${seed}"
-	publishDir "${params.clines}/${subsample}_${seed}", mode: 'copy'
+	publishDir "${params.clines}/${subsample}", mode: 'copy'
 
     cpus 1
 	time '8h'
@@ -417,7 +417,7 @@ process EVAL_MODEL_PERFORMANCE {
 	/* */
 
 	tag "${subsample}, ${proportion}, ${seed}"
-	publishDir "${params.clines}/${subsample}_${seed}", mode: 'copy'
+	publishDir "${params.clines}/${subsample}", mode: 'copy'
 
     cpus 1
 	time '10m'
