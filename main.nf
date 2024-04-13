@@ -120,7 +120,8 @@ workflow {
     FIT_CLINE_MODELS (
         RUN_ENTROPY.out
 			.groupTuple( by: [0,1], sort: true )
-			.map { sample, seed, hdf5s -> tuple( sample, seed, hdf5s[0], hdf5s[1], hdf5s[2] ) },
+			.map { sample, seed, hdf5s -> tuple( sample, seed, hdf5s[0], hdf5s[1], hdf5s[2] ) }
+			.view(),
         ch_sample_meta
 			.mix(RECORD_FINAL_ROSTER.out.collect())
 			.collect()
