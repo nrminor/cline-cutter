@@ -345,7 +345,7 @@ process CREATE_Q_PRIORS {
 
 	script:
 	file_base = file(mpgl.toString()).getSimpleName().split(".recode")[0]
-	name_parts = file_base.split("_")
+	name_parts = file_base.replace("_sample", "").split("_")
 	downsampling_regime = name_parts[0]
 	proportion = name_parts[1]
 	seed = name_parts[2]
@@ -362,7 +362,7 @@ process RUN_ENTROPY {
 
 	/* */
 
-	tag "${subsample}, ${random_seed}"
+	tag "${subsample}, ${proportion}, ${seed}, ${entropy_seed}"
 	publishDir "${params.entropy}/${subsample}", mode: 'copy'
 
     cpus 8
@@ -372,10 +372,10 @@ process RUN_ENTROPY {
 	tuple path(mpgl), path(starting_q), val(proportion), val(seed), val(entropy_seed)
 
 	output:
-	tuple val(subsample), val(seed), path("${subsample}_${proportion}_${seed}_${entropy_seed}.hdf5")
+	tuple val(subsample), val(proportion), val(seed), path("${subsample}_${proportion}_${seed}_${entropy_seed}.hdf5")
 
 	script:
-	subsample = file(mpgl.toString()).getSimpleName()
+	subsample = file(mpgl.toString()).getSimpleName().split("_")[0]
 	"""
 	entropy -i ${mpgl} \
     -r ${entropy_seed} -q ${starting_q} \
@@ -391,19 +391,19 @@ process FIT_CLINE_MODELS {
 
 	/* */
 
-	tag "${subsample}, ${seed}"
+	tag "${subsample}, ${proportion}, ${seed}"
 	publishDir "${params.clines}/${subsample}_${seed}", mode: 'copy'
 
     cpus 1
 	time '8h'
 
 	input:
-	tuple val(subsample), val(seed), path(hdf5_1), path(hdf5_2), path(hdf5_3)
+	tuple val(subsample), val(proportion), val(seed), path(hdf5_1), path(hdf5_2), path(hdf5_3)
     path metadata_files
 
 	output:
 	path "*", emit: all_files
-	tuple val(subsample), val(seed), path("${subsample}_model_logs.txt"), path("*_aic.tsv"), emit: modeling_logs
+	tuple val(subsample), val(proportion), val(seed), path("${subsample}_model_logs.txt"), path("*_aic.tsv"), emit: modeling_logs
 
 	script:
 	"""
@@ -416,21 +416,21 @@ process EVAL_MODEL_PERFORMANCE {
 
 	/* */
 
-	tag "${subsample}"
+	tag "${subsample}, ${proportion}, ${seed}"
 	publishDir "${params.clines}/${subsample}_${seed}", mode: 'copy'
 
     cpus 1
 	time '10m'
 
 	input:
-	tuple val(subsample), val(seed), path(modeling_logs), path(aic_values)
+	tuple val(subsample), val(proportion), val(seed), path(modeling_logs), path(aic_values)
 
 	output:
 	path "*"
 
 	script:
 	"""
-	collate_model_evals.py "${subsample}" "${subsample}_model_logs.txt"
+	collate_model_evals.py "${subsample}_${proportion}_${seed}" "${subsample}_model_logs.txt"
 	"""
 
 
