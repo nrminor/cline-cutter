@@ -344,7 +344,7 @@ process CREATE_Q_PRIORS {
 	tuple path(mpgl), path("*.txt"), val(proportion), val(seed)
 
 	script:
-	file_base = file(mpgl.toString()).getSimpleName().split(".recode")[0]
+	file_base = file(mpgl.toString()).getBaseName().split(".recode")[0]
 	name_parts = file_base.replace("_sample", "").split("_")
 	downsampling_regime = name_parts[0]
 	proportion = name_parts[1]
