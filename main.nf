@@ -113,8 +113,9 @@ workflow {
 	)
 
     RUN_ENTROPY (
-        CREATE_Q_PRIORS.out,
-		ch_seeds
+        CREATE_Q_PRIORS.out
+			.combine(ch_seeds)
+			.view()
     )
 
     FIT_CLINE_MODELS (
@@ -370,8 +371,7 @@ process RUN_ENTROPY {
 	time '7d'
 
 	input:
-	tuple path(mpgl), path(starting_q), val(proportion), val(seed)
-	val entropy_seed
+	tuple path(mpgl), path(starting_q), val(proportion), val(seed), val(entropy_seed)
 
 	output:
 	tuple val(subsample), val(seed), path("${subsample}_${proportion}_${seed}_${entropy_seed}.hdf5")
