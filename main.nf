@@ -115,14 +115,12 @@ workflow {
     RUN_ENTROPY (
         CREATE_Q_PRIORS.out
 			.combine(ch_seeds)
-			.view()
     )
 
     FIT_CLINE_MODELS (
         RUN_ENTROPY.out
 			.groupTuple( by: [0,1], sort: true )
-			.map { sample, seed, hdf5s -> tuple( sample, seed, hdf5s[0], hdf5s[1], hdf5s[2] ) }
-			.view(),
+			.map { sample, seed, hdf5s -> tuple( sample, seed, hdf5s[0], hdf5s[1], hdf5s[2] ) },
         ch_sample_meta
 			.mix(RECORD_FINAL_ROSTER.out.collect())
 			.collect()
