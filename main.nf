@@ -113,12 +113,13 @@ workflow {
 	)
 
     RUN_ENTROPY (
-        CREATE_Q_PRIORS.out
+        CREATE_Q_PRIORS.out,
+		ch_seeds
     )
 
     FIT_CLINE_MODELS (
         RUN_ENTROPY.out
-			.groupTuple( sort: true )
+			.groupTuple( by: [0,1], sort: true )
 			.map { sample, seed, hdf5s -> tuple( sample, seed, hdf5s[0], hdf5s[1], hdf5s[2] ) },
         ch_sample_meta
 			.mix(RECORD_FINAL_ROSTER.out.collect())
@@ -369,17 +370,18 @@ process RUN_ENTROPY {
 
 	input:
 	tuple path(mpgl), path(starting_q), val(proportion), val(seed)
+	each val(entropy_seed)
 
 	output:
-	tuple val(subsample), val(seed), path("*.hdf5")
+	tuple val(subsample), val(seed), path("${subsample}_${proportion}_${seed}_${entropy_seed}.hdf5")
 
 	script:
 	subsample = file(mpgl.toString()).getSimpleName()
 	"""
 	entropy -i ${mpgl} \
-    -r ${seed} -q ${starting_q} \
+    -r ${entropy_seed} -q ${starting_q} \
     -m 1 -n 2 -k 2 -w 1 -Q 1 -l 120000 -b 30000 -t 30 \
-    -o ${subsample}_${proportion}_${seed}.hdf5
+    -o ${subsample}_${proportion}_${seed}_${entropy_seed}.hdf5
 	"""
 
 }
