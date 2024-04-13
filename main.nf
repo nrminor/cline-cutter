@@ -371,7 +371,7 @@ process RUN_ENTROPY {
 
 	input:
 	tuple path(mpgl), path(starting_q), val(proportion), val(seed)
-	each val(entropy_seed)
+	val entropy_seed
 
 	output:
 	tuple val(subsample), val(seed), path("${subsample}_${proportion}_${seed}_${entropy_seed}.hdf5")
