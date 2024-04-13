@@ -110,16 +110,17 @@ Write out the MPGL header and dataframe.
 function write_mpgl(header::EntropyHeader, mpgl_df::DataFrame, name_prefix::String)
 
     # construct the output name based on the input prefix
+    tmp_name = "$name_prefix.tmp.mpgl"
     output_name = "$name_prefix.mpgl"
 
     # start with the header
-    open("$name_prefix.tmp.mpgl", "w") do writer
+    open(tmp_name, "w") do writer
         println(writer, header.line1)
         println(writer, header.line2)
     end
 
     # finish with the table data
-    open("$name_prefix.tmp.mpgl", "a") do appender
+    open(tmp_name, "a") do appender
         CSV.write(
             appender, mpgl_df;
             append=true, delim=' ', quotestrings=false, writeheader=false
@@ -127,14 +128,14 @@ function write_mpgl(header::EntropyHeader, mpgl_df::DataFrame, name_prefix::Stri
     end
 
     # remove quotes
-    open("$name_prefix.tmp.mpgl", "r") do reader
+    open(tmp_name, "r") do reader
         open(output_name, "w") do writer
             for line in eachline(reader)
                 println(writer, replace(line, "\"" => ""))
             end
         end
     end
-    rm("$name_prefix.tmp.mpgl")
+    rm(tmp_name)
 
 end
 
@@ -164,8 +165,8 @@ function convert_all_files()
         # parse out the input file simple name
         simple_name = replace(vcf_file, ".vcf" => "")
 
-        # write out the new file
-        @async write_mpgl(header, mpgl_df, simple_name)
+        # write out the new file and remove
+        write_mpgl(header, mpgl_df, simple_name)
     end
 
 end
