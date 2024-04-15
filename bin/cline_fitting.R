@@ -52,6 +52,7 @@ if (length(hdf_5_files) < 3) {
 hdf5_1 <- hdf_5_files[1]
 hdf5_2 <- hdf_5_files[2]
 hdf5_3 <- hdf_5_files[3]
+sample_rep <- str_remove(hdf5_1, "_1.hdf5")
 
 
 #### LOAD METADATA ####
@@ -66,7 +67,7 @@ if (grepl("random", hdf5_1)) {
 } else {
   downsample_regime <- "even"
 }
-samples_path <- paste(downsample_regime, "_sample.txt", sep = "")
+samples_path <- paste(sample_rep, ".txt", sep = "")
 
 # filter to the current subset and remove space from first colname
 metadata <- read_tsv(samples_path, col_names = "Sample ID",

@@ -405,8 +405,9 @@ process FIT_CLINE_MODELS {
 	tuple val(subsample), val(proportion), val(seed), path("${subsample}_model_logs.txt"), path("*_aic.tsv"), emit: modeling_logs
 
 	script:
+	samplesheet_name = file(params.samplesheet.toString()).getBaseName()
 	"""
-	cline_fitting.R &> ${subsample}_${seed}_model_logs.txt
+	cline_fitting.R	&> ${subsample}_${seed}_model_logs.txt
 	"""
 
 }
@@ -431,7 +432,6 @@ process EVAL_MODEL_PERFORMANCE {
 	"""
 	collate_model_evals.py "${subsample}_${proportion}_${seed}" "${subsample}_model_logs.txt"
 	"""
-
 
 }
 
