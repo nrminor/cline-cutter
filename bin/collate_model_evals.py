@@ -1,16 +1,33 @@
 #!/usr/bin/env python3
 
 """
-TODO
+usage:
+```
+python3 collate_model_evals.py <SUBSAMPLING_LABEL> <MODELING_LOG>
+```
 """
 
 import os
 import re
 import sys
 from pathlib import Path
-from typing import Tuple
+from typing import Optional, Tuple
+from dataclasses import dataclass
 
 import polars as pl
+
+
+@dataclass(frozen=True)
+class ReplicateData:
+    """
+    ReplicateData stores metadata about the cline-cutter run, namely
+    the downsampling regime used, the proportion of samples downsampled,
+    and the random number seed used for this replicate.
+    """
+
+    regime: str
+    proportion: Optional[float]
+    seed: Optional[int]
 
 
 def parse_fitting_log(fitting_log: Path, regime: str) -> Tuple[pl.LazyFrame, str]:
@@ -98,7 +115,7 @@ def parse_fitting_log(fitting_log: Path, regime: str) -> Tuple[pl.LazyFrame, str
     return (score_df, output_name)
 
 
-def join_model_evals(score_df: pl.LazyFrame, aic_file: Path, sampling_regime: str):
+def join_model_evals(score_df: pl.LazyFrame, aic_file: Path, rep_data: ReplicateData):
     """
     The function `join_model_evals()` uses a simple leftjoin to combine AIC information
     and Metropolis acceptance rates into one table listing both statistics for each
@@ -106,7 +123,7 @@ def join_model_evals(score_df: pl.LazyFrame, aic_file: Path, sampling_regime: st
     """
 
     aic_df = pl.scan_csv(aic_file, separator="\t")
-    writeout_name = f"{sampling_regime}_regime_model_evals.csv"
+    writeout_name = f"{rep_data.regime}_regime_model_evals.csv"
 
     assert (
         "model" in aic_df.columns
@@ -115,8 +132,36 @@ def join_model_evals(score_df: pl.LazyFrame, aic_file: Path, sampling_regime: st
         "AICc" in aic_df.columns
     ), "Expected 'AICc' column is missing in the AIC score table."
 
-    aic_df.join(score_df, how="left", left_on="model", right_on="Model Label").sink_csv(
-        writeout_name
+    (
+        aic_df.join(score_df, how="left", left_on="model", right_on="Model Label")
+        .with_columns(
+            pl.col("model")
+            .str.replace("cline_", "")
+            .str.replace("Model", "")
+            .str.split("_")
+            .alias("model")
+        )
+        .with_columns(
+            [
+                pl.col("model").list.first().alias("Model bounding"),
+                pl.col("model").list.last().alias("Cline side"),
+                pl.lit(rep_data.proportion).alias("Proportion downsampled"),
+                pl.lit(rep_data.seed).alias("Replicate seed"),
+            ]
+        )
+        .drop("model")
+        .select(
+            [
+                "Model bounding",
+                "Cline side",
+                "Proportion downsampled",
+                "Replicate seed",
+                "AICc",
+                "Metropolis Acceptance Rate",
+            ]
+        )
+        .sort(["AICc", "Metropolis Acceptance Rate"], descending=True)
+        .sink_csv(writeout_name)
     )
 
     return writeout_name
@@ -128,6 +173,17 @@ def main() -> None:
     """
     sampling_regime = sys.argv[1]
     fitting_log = sys.argv[2]
+
+    # split out sampling regime, proportion, and seed and package as a portable dataclass
+    split_id = sampling_regime.split("_")
+    if len(split_id) == 3:
+        rep_data = ReplicateData(
+            split_id[0],
+            split_id[1],
+            split_id[2],
+        )
+    else:
+        rep_data = ReplicateData(split_id[0], None, None)
 
     score_df, writeout_name = parse_fitting_log(fitting_log, sampling_regime)
     print(f"Parsed logging information written out to {writeout_name}")
@@ -143,7 +199,7 @@ def main() -> None:
         print("AIC file not found. Finishing here.")
         sys.exit(0)
 
-    full_table = join_model_evals(score_df, aic_files[0], sampling_regime)
+    full_table = join_model_evals(score_df, aic_files[0], rep_data)
     assert os.path.isfile(full_table), f"Writing of {full_table} failed."
     print(
         f"""
