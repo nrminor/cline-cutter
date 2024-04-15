@@ -119,8 +119,7 @@ workflow {
 
     FIT_CLINE_MODELS (
         RUN_ENTROPY.out
-			.groupTuple( by: [0,1,2], sort: true )
-			.map { sample, seed, hdf5s -> tuple( sample, seed, hdf5s[0], hdf5s[1], hdf5s[2] ) },
+			.groupTuple( by: [0,1,2], sort: true ),
         ch_sample_meta
 			.mix(RECORD_FINAL_ROSTER.out.collect())
 			.collect()
@@ -398,7 +397,7 @@ process FIT_CLINE_MODELS {
 	time '8h'
 
 	input:
-	tuple val(subsample), val(proportion), val(seed), path(hdf5_1), path(hdf5_2), path(hdf5_3)
+	tuple val(subsample), val(proportion), val(seed), path(hdf5_files)
     path metadata_files
 
 	output:
