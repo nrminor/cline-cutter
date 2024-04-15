@@ -123,7 +123,7 @@ def join_model_evals(score_df: pl.LazyFrame, aic_file: Path, rep_data: Replicate
     """
 
     aic_df = pl.scan_csv(aic_file, separator="\t")
-    writeout_name = f"{rep_data.regime}_regime_model_evals.csv"
+    writeout_name = f"{rep_data.regime}_regime_p{rep_data.proportion}_s{rep_data.seed}_model_evals.csv"
 
     assert (
         "model" in aic_df.columns

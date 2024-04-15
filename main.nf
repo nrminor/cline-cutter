@@ -417,7 +417,7 @@ process EVAL_MODEL_PERFORMANCE {
 	/* */
 
 	tag "${subsample}, ${proportion}, ${seed}"
-	publishDir "${params.clines}/${subsample}", mode: 'copy'
+	publishDir "${params.clines}/${subsample}", mode: 'copy', overwrite: true
 
     cpus 1
 	time '10m'
