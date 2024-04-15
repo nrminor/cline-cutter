@@ -402,12 +402,12 @@ process FIT_CLINE_MODELS {
 
 	output:
 	path "*", emit: all_files
-	tuple val(subsample), val(proportion), val(seed), path("${subsample}_model_logs.txt"), path("*_aic.tsv"), emit: modeling_logs
+	tuple val(subsample), val(proportion), val(seed), path("*_model_logs.txt"), path("*_aic.tsv"), emit: modeling_logs
 
 	script:
 	samplesheet_name = file(params.samplesheet.toString()).getBaseName()
 	"""
-	cline_fitting.R	&> ${subsample}_${seed}_model_logs.txt
+	cline_fitting.R	&> ${subsample}_${proportion}_${seed}_model_logs.txt
 	"""
 
 }
