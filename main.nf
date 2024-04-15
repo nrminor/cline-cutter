@@ -430,7 +430,7 @@ process EVAL_MODEL_PERFORMANCE {
 
 	script:
 	"""
-	collate_model_evals.py "${subsample}_${proportion}_${seed}" "${subsample}_model_logs.txt"
+	collate_model_evals.py "${subsample}_${proportion}_${seed}" ${modeling_logs}
 	"""
 
 }
