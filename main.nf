@@ -294,8 +294,8 @@ process RECORD_FINAL_ROSTER {
 	path "*.txt"
 
 	script:
-	file_base = file(vcf.toString()).getSimpleName().split(".recode")[0]
-	name_parts = file_base.split("_")
+	file_base = file(mpgl.toString()).getBaseName().split(".recode")[0]
+	name_parts = file_base.replace("_sample", "").split("_")
 	downsampling_regime = name_parts[0]
 	proportion = name_parts[1]
 	seed = name_parts[2]
