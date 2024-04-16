@@ -39,11 +39,12 @@ def check_files(
 
     # if on the first encountered file, which is to say the file at the end
     # of the list of files to check, make sure the file can be read, but otherwise
-    # effectively skip and begin recursion
+    # effectively skip and begin recursion. Also, small note that remaining file
+    # index is set to `len(eval_files) - 2` because Python is 0-indexed.
     if remaining_files is None:
         _ = pl.read_csv(eval_files[-1], n_rows=1)
         return check_files(
-            eval_files, checked_files.append(eval_files[-1]), len(eval_files) - 1
+            eval_files, checked_files.append(eval_files[-1]), len(eval_files) - 2
         )
 
     # if on any file other than the one at the end of the list of files to check,
