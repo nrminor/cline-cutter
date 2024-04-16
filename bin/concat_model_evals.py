@@ -94,7 +94,7 @@ def main() -> None:
     checked_files = check_files(eval_files)
 
     # read the files into an immutable tuple
-    eval_df_list = (pl.read_csv(file) for file in checked_files)
+    eval_df_list = (pl.scan_csv(file) for file in checked_files)
 
     # append each file into a single dataframe and write out
     pl.concat(eval_df_list).sink_csv("concatenated_evals.csv")
