@@ -403,7 +403,7 @@ process FIT_CLINE_MODELS {
 	/* */
 
 	tag "${subsample}, ${proportion}, ${seed}"
-	publishDir "${params.clines}/${subsample}", mode: 'copy', overwrite: true
+	publishDir "${params.clines}/${subsample}_p${proportion}_s${seed}", mode: 'copy', overwrite: true
 
     cpus 1
 	time '8h'
