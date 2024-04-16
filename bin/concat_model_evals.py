@@ -8,25 +8,25 @@ python3 concat_model_evals.py <PATTERN>
 """
 import os
 import sys
-from typing import List, Optional, Tuple
+from typing import List, Optional
 
 import polars as pl
 
 
-def find_files(match_pattern: str) -> Tuple[str]:
+def find_files(match_pattern: str) -> List[str]:
     """
     Collect all files that match a certain pattern and return in a tuple.
     """
     cwd_files = os.listdir(".")
-    eval_files = tuple(
+    eval_files = [
         file for file in cwd_files if match_pattern in file and os.path.isfile(file)
-    )
+    ]
 
     return eval_files
 
 
 def check_files(
-    eval_files: Tuple[str],
+    eval_files: List[str],
     checked_files: Optional[List[str]] = None,
     remaining_files: Optional[int] = None,
 ) -> List[str]:
