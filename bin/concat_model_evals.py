@@ -18,7 +18,7 @@ def find_files(match_pattern: str) -> Tuple[str]:
     Collect all files that match a certain pattern and return in a tuple.
     """
     cwd_files = os.listdir(".")
-    eval_files = (
+    eval_files = tuple(
         file for file in cwd_files if match_pattern in file and os.path.isfile(file)
     )
 
