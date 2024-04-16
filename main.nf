@@ -455,6 +455,8 @@ process CONCAT_MODEL_EVALS {
 
 	publishDir "${params.evals}", mode: 'copy', overwrite: true
 
+	errorStrategy 'ignore'
+
     cpus 4
 	time '10m'
 
