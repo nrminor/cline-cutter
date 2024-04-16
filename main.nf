@@ -129,6 +129,10 @@ workflow {
 		FIT_CLINE_MODELS.out.modeling_logs
 	)
 
+	CONCAT_MODEL_EVALS (
+		EVAL_MODEL_PERFORMANCE.out.collect()
+	)
+
 
 }
 // --------------------------------------------------------------- //
@@ -150,8 +154,9 @@ params.downsampled = params.variants + "/4_downsampled"
 
 // Analyses and visualizations
 params.analyses = params.results + "/2_analyses"
-params.entropy = params.analyses + "/1_entropy"
-params.clines = params.analyses + "/2_clines"
+params.entropy = params.analyses + "/1_entropy_analysis"
+params.clines = params.analyses + "/2_cline_fitting"
+params.evals = params.analyses + "/3_evaluation"
 
 // --------------------------------------------------------------- //
 
@@ -161,11 +166,12 @@ params.clines = params.analyses + "/2_clines"
 // PROCESS SPECIFICATION
 // --------------------------------------------------------------- //
 
+
 process VCF_FILTERING {
 
 	/* */
 
-	publishDir params.filtered, mode: 'copy'
+	publishDir params.filtered, mode: 'copy', overwrite: true
 
 	time '6h'
 
@@ -189,11 +195,12 @@ process VCF_FILTERING {
 
 }
 
+
 process SNP_THINNING {
 
 	/* */
 
-	publishDir params.thinned, mode: 'copy'
+	publishDir params.thinned, mode: 'copy', overwrite: true
 
 	time '1h'
 
@@ -215,11 +222,12 @@ process SNP_THINNING {
 
 }
 
+
 process FILTER_INDIVS {
 
 	/* */
 
-	publishDir params.no_missing, mode: 'copy'
+	publishDir params.no_missing, mode: 'copy', overwrite: true
 
 	time '1h'
 
@@ -247,12 +255,13 @@ process FILTER_INDIVS {
 
 }
 
+
 process RUN_DOWNSAMPLING {
 
 	/* */
 
 	tag "${proportion}, ${seed}"
-	publishDir params.downsampled, mode: 'copy'
+	publishDir params.downsampled, mode: 'copy', overwrite: true
 
 	cpus 4
 	time '6h'
@@ -277,12 +286,13 @@ process RUN_DOWNSAMPLING {
 
 }
 
+
 process RECORD_FINAL_ROSTER {
 
 	/*
 	*/
 
-	publishDir params.downsampled, mode: 'copy'
+	publishDir params.downsampled, mode: 'copy', overwrite: true
 
 	cpus 1
 	time '10m'
@@ -305,11 +315,12 @@ process RECORD_FINAL_ROSTER {
 
 }
 
+
 process CONVERT_TO_MPGL {
 
 	/* */
 
-	publishDir params.entropy, mode: 'copy'
+	publishDir params.entropy, mode: 'copy', overwrite: true
 
     cpus 12
 	time '1h'
@@ -326,6 +337,7 @@ process CONVERT_TO_MPGL {
 	"""
 
 }
+
 
 process CREATE_Q_PRIORS {
 
@@ -357,12 +369,13 @@ process CREATE_Q_PRIORS {
 
 }
 
+
 process RUN_ENTROPY {
 
 	/* */
 
 	tag "${subsample}, ${proportion}, ${seed}, ${entropy_seed}"
-	publishDir "${params.entropy}/${subsample}", mode: 'copy'
+	publishDir "${params.entropy}/${subsample}", mode: 'copy', overwrite: true
 
     cpus 8
 	time '7d'
@@ -384,14 +397,13 @@ process RUN_ENTROPY {
 
 }
 
-// process VISUALIZE_ENTROPY_TRACE {}
 
 process FIT_CLINE_MODELS {
 
 	/* */
 
 	tag "${subsample}, ${proportion}, ${seed}"
-	publishDir "${params.clines}/${subsample}", mode: 'copy'
+	publishDir "${params.clines}/${subsample}", mode: 'copy', overwrite: true
 
     cpus 1
 	time '8h'
@@ -412,14 +424,15 @@ process FIT_CLINE_MODELS {
 
 }
 
+
 process EVAL_MODEL_PERFORMANCE {
 
 	/* */
 
 	tag "${subsample}, ${proportion}, ${seed}"
-	publishDir "${params.clines}/${subsample}", mode: 'copy', overwrite: true
+	publishDir "${params.evals}/${subsample}", mode: 'copy', overwrite: true
 
-    cpus 1
+    cpus 4
 	time '10m'
 
 	input:
@@ -435,6 +448,28 @@ process EVAL_MODEL_PERFORMANCE {
 
 }
 
-// process REPORT_MODEL_PERFORMANCE {}
+
+process CONCAT_MODEL_EVALS {
+
+	/* */
+
+	publishDir "${params.evals}", mode: 'copy', overwrite: true
+
+    cpus 4
+	time '10m'
+
+	input:
+	path model_evals
+
+	output:
+	path "*"
+
+	script:
+	"""
+	concat_model_evals.py "_model_evals.csv"
+	"""
+
+}
+
 
 // --------------------------------------------------------------- //
