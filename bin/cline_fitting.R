@@ -344,19 +344,34 @@ Q_model_none_noneFit <- hzar.doFit(Q_model_none_noneFitR)
 
 # ### plot model to look for run stability and convergence and return the
 # mcmc data with an added a log likelihood column.
-pdf("free_both_model_trace.pdf", height = 11, width = 8.5)
+pdf(
+  paste(downsampling_regime, "free_both_model_trace.pdf", sep = "_"),
+  height = 11, width = 8.5
+)
 plot(hzar.mcmc.bindLL(Q_model_free_bothFit))
 dev.off() |> invisible()
-pdf("free_left_model_trace.pdf", height = 11, width = 8.5)
+pdf(
+  paste(downsampling_regime, "free_left_model_trace.pdf", sep = "_"),
+  height = 11, width = 8.5
+)
 plot(hzar.mcmc.bindLL(Q_model_free_leftFit))
 dev.off() |> invisible()
-pdf("free_right_model_trace.pdf", height = 11, width = 8.5)
+pdf(
+  paste(downsampling_regime, "free_right_model_trace.pdf", sep = "_"),
+  height = 11, width = 8.5
+)
 plot(hzar.mcmc.bindLL(Q_model_free_rightFit))
 dev.off() |> invisible()
-pdf("free_mirror_model_trace.pdf", height = 11, width = 8.5)
+pdf(
+  paste(downsampling_regime, "free_mirror_model_trace.pdf", sep = "_"),
+  height = 11, width = 8.5
+)
 plot(hzar.mcmc.bindLL(Q_model_free_mirrorFit))
 dev.off() |> invisible()
-pdf("free_none_model_trace.pdf", height = 11, width = 8.5)
+pdf(
+  paste(downsampling_regime, "free_none_model_trace.pdf", sep = "_"),
+  height = 11, width = 8.5
+)
 plot(hzar.mcmc.bindLL(Q_model_free_noneFit))
 dev.off() |> invisible()
 
