@@ -145,6 +145,7 @@ def join_model_evals(score_df: pl.LazyFrame, aic_file: Path, rep_data: Replicate
             [
                 pl.col("model").list.first().alias("Model bounding"),
                 pl.col("model").list.last().alias("Cline side"),
+                pl.lit(rep_data.regime).alias("Regime"),
                 pl.lit(rep_data.proportion).alias("Proportion downsampled"),
                 pl.lit(rep_data.seed).alias("Replicate seed"),
             ]
@@ -154,6 +155,7 @@ def join_model_evals(score_df: pl.LazyFrame, aic_file: Path, rep_data: Replicate
             [
                 "Model bounding",
                 "Cline side",
+                "Regime",
                 "Proportion downsampled",
                 "Replicate seed",
                 "AICc",
