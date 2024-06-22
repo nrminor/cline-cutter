@@ -333,7 +333,7 @@ process CONVERT_TO_MPGL {
 
 	script:
 	"""
-	vcf2mpgl.jl \$(pwd)
+	vcf2mpgl.jl .
 	"""
 
 }
