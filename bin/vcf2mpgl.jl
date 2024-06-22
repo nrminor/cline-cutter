@@ -1,4 +1,4 @@
-#!/usr/bin/env -S julia --threads auto --history-file=no --startup-file=no --compiled-modules=no
+#!/usr/bin/env -S julia --threads auto --color=yes
 
 using CSV, DataFrames, VariantCallFormat, VCFTools
 using Base.Threads: @threads

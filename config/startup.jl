@@ -1,4 +1,4 @@
-#!/usr/bin/env -S julia --threads auto --color=yes --gcthreads 3 --compile=all
+#!/usr/bin/env -S julia --threads auto --color=yes --compile=all --optimize=3
 
 module Startup
 
