@@ -2,13 +2,6 @@
 
 module Startup
 
-try
-    using PrecompileTools
-catch err
-    @warn "Error importing PrecompileTools: $err. Code loading could not be accelerated. Exiting now."
-    exit(0)
-end
-
 using PrecompileTools
 
 @setup_workload begin

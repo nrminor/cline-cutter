@@ -1,4 +1,4 @@
-#!/usr/bin/env -S julia --threads auto --color=yes
+#!/usr/bin/env -S julia --threads auto --color=yes --inline=yes
 
 using CSV, DataFrames, VariantCallFormat, VCFTools
 using Base.Threads: @threads

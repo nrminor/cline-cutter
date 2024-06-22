@@ -130,18 +130,18 @@ ENV JULIA_SCRATCH_TRACK_ACCESS 0
 ENV JULIA_HISTORY /scratch/.julia_history
 COPY Project.toml /opt/.julia/environments/v1.10/Project.toml
 COPY Manifest.toml /opt/.julia/environments/v1.10/Manifest.toml
-RUN julia --threads auto --color=yes --compile=all --optimize=3 -e \
+RUN julia --threads auto --color=yes --inline=yes --compile=all --optimize=3 -e \
     'using Pkg; \
     Pkg.activate(joinpath(DEPOT_PATH[1], "environments", "v1.10")); \
     Pkg.precompile()'
-RUN julia --threads auto --color=yes --compile=all --optimize=3 -e \
+RUN julia --threads auto --color=yes --inline=yes --compile=all --optimize=3 -e \
     'using Pkg; \
     Pkg.add("PrecompileTools"); \
     Pkg.precompile()'
 COPY config/startup.jl /opt/.julia/config/startup.jl
-RUN julia --threads auto --color=yes --compile=all --optimize=3 /opt/.julia/config/startup.jl
-RUN julia --threads auto --color=yes --compile=all --optimize=3 -e \
-    'using CSV, DataFrames, Pipe, VariantCallFormat, VCFTools'
+RUN julia --threads auto --color=yes --inline=yes --compile=all --optimize=3 --startup-file=no /opt/.julia/config/startup.jl
+RUN julia --threads auto --color=yes --inline=yes --compile=all --optimize=3 --startup-file=yes -e \
+    'using CSV, DataFrames, Pipe, VariantCallFormat, VCFTools, PrecompileTools, Pkg ; Pkg.precompile()'
 
 # fix libgsl for entropy
 RUN ln /usr/lib/x86_64-linux-gnu/libgsl.so /usr/lib/x86_64-linux-gnu/libgsl.so.25
