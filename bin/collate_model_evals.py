@@ -36,7 +36,8 @@ def parse_fitting_log(fitting_log: Path, regime: str) -> Tuple[pl.LazyFrame, str
     `hzar` R package in project script `cline_fitting.R` and extracts two pieces of
     information from it:
     1. The names provided for each competing cline model in `cline_fitting.R`.
-    2. The Metropolis acceptance rates for each model after run through an MCMC chain.
+    2. The cline center and width estimates from each model.
+    3. The Metropolis acceptance rates for each model after run through an MCMC chain.
 
     This information can be used to evaluate the performance of each model with respect
     to their explorations of genomic cline parameter space, where higher Metropolis
@@ -82,6 +83,35 @@ def parse_fitting_log(fitting_log: Path, regime: str) -> Tuple[pl.LazyFrame, str
         len(model_names) > 0
     ), f"Unable to parse any model names in the provided log {fitting_log}"
 
+    # parse out the cline centers and widths
+    cline_center = [
+        (
+            line.replace(
+                f'[1] "Estimated cline center for the {regime} downsampling regime: ',
+                "",
+            ).replace("':", "")
+        )
+        for line in cleaned_lines
+        if "Estimated cline center for the" in line
+    ]
+    cline_width = [
+        (
+            line.replace(
+                f'[1] "Estimated cline width for the {regime} downsampling regime: ', ""
+            ).replace("':", "")
+        )
+        for line in cleaned_lines
+        if "Estimated cline width for the" in line
+    ]
+
+    # make sure it was able to parse cline statistics with the expected susbtrings
+    assert (
+        len(cline_center) > 0
+    ), f"Unable to parse any cline centers in the provided log {fitting_log}"
+    assert (
+        len(cline_width) > 0
+    ), f"Unable to parse any cline widths in the provided log {fitting_log}"
+
     # parse our the Metropolis scores for each model
     model_scores = [
         float(line.replace("The Metropolis acceptance rate was ", ""))
@@ -103,14 +133,24 @@ def parse_fitting_log(fitting_log: Path, regime: str) -> Tuple[pl.LazyFrame, str
         for each model.
         """
 
-    # structure as a dataframe and write it out
+    # structure as a dataframe
     score_df = pl.LazyFrame(
-        {
-            "Model Label": model_names,
-            "Metropolis Acceptance Rate": model_scores,
-        }
-    ).sort("Metropolis Acceptance Rate", descending=True)
-    score_df.sink_csv(output_name)
+        {"Model Label": model_names, "Metropolis Acceptance Rate": model_scores}
+    )
+
+    # pull in cline statistics with a join
+    cline_df = score_df.filter(
+        pl.col("Model Label").str.contains("free")
+        & pl.col("Model Label").str.contains("none")
+    ).with_columns(
+        pl.lit(cline_width).alias("Cline Width Estimate"),
+        pl.lit(cline_center).alias("Cline Center Estimate"),
+    )
+    (
+        score_df.join(cline_df, on="Model Label", how="left")
+        .sort("Metropolis Acceptance Rate", descending=True)
+        .sink_csv(output_name)
+    )
 
     return (score_df, output_name)
 
@@ -158,6 +198,8 @@ def join_model_evals(score_df: pl.LazyFrame, aic_file: Path, rep_data: Replicate
                 "Regime",
                 "Proportion downsampled",
                 "Replicate seed",
+                "Cline Center Estimate",
+                "Cline Width Estimate",
                 "AICc",
                 "Metropolis Acceptance Rate",
             ]
